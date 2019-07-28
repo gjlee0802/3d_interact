@@ -196,7 +196,7 @@ CMAKE_OBJCOPY:FILEPATH=/usr/bin/objcopy
 CMAKE_OBJDUMP:FILEPATH=/usr/bin/objdump
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=xtion_ne
+CMAKE_PROJECT_NAME:STATIC=proj
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
@@ -717,6 +717,12 @@ USB_10_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libusb-1.0.so
 
 //The directory containing VTKConfig.cmake
 VTK_DIR:PATH=/usr/lib/cmake/vtk-7.1
+
+//Value Computed by CMake
+proj_BINARY_DIR:STATIC=/home/user/workspace/proj
+
+//Value Computed by CMake
+proj_SOURCE_DIR:STATIC=/home/user/workspace/proj
 
 //Value Computed by CMake
 xtion_ne_BINARY_DIR:STATIC=/home/user/workspace/proj

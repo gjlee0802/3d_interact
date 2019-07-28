@@ -27,7 +27,7 @@ class HandViewer
 		HandViewer () : viewer (new pcl::visualization::PCLVisualizer ("3D Viewer")) {}
 		int rm_cnt=0;
 		
-		int button_pressed;	// This should be changed simultaneously by arduino's informations
+		int button_pressed=2;	// This should be changed simultaneously by arduino's informations
 
 	void viewer_set()
 	{

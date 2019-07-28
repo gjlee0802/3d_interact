@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-project(xtion_ne)
+project(proj)
 
 find_package(PCL 1.9 REQUIRED)
 
