@@ -63,15 +63,16 @@ class HandViewer
 		// Create the PassThrough Filtering object
 		pcl::PassThrough<PointT> pass;
 
+		/*
 		// Create the KdTree object for the search method of the extraction
 		pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-
 		// for Euclidian Cluster
 		std::vector<pcl::PointIndices> cluster_indices;
 		pcl::EuclideanClusterExtraction<PointT> ec;
   		ec.setClusterTolerance (0.1); // 0.01 -> 1cm
   		ec.setMinClusterSize (300);
   		ec.setMaxClusterSize (20000); // 10000
+		*/
 
 		//int rm_cnt=0;
 		while (!viewer->wasStopped())
@@ -125,7 +126,7 @@ class HandViewer
 				{
 					pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
 					for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-						cloud_cluster->points.push_back (cloud_filtered->points[*pit]); //*
+						cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
 					cloud_cluster->width = cloud_cluster->points.size ();
 					cloud_cluster->height = 1;
 					cloud_cluster->is_dense = true;
@@ -176,7 +177,7 @@ class HandViewer
 					viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
 					rm_cnt=1;	
 				}
-				//K-means clustering END
+				// K-means clustering END
 
 				// Get_max & min_coordinates
 				pcl::PointXYZ minPt, maxPt;
