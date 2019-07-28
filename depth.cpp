@@ -208,10 +208,13 @@ class HandViewer
 				
 				}else
 				{
+					std::cout << "[CLEAR]: dis queue" << std::endl;
 					while(!dis.empty())
 					{
-						std::cout << "[CLEAR] dis queue" << std::endl;
+						dis.pop();
 					}
+					std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;
+
 				}
 
 				// Get_max & min_coordinates
