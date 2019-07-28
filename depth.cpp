@@ -53,7 +53,7 @@ class HandViewer
 		// Initialize Grabber Pointer ("interface")
 		pcl::Grabber* interface = new pcl::io::OpenNI2Grabber(
                 "", pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz,
-                pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz);// QVGA_60Hz Recommanded (VGA_30Hz or QVGA_60Hz)
+                pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz);// QVGA_60Hz Recommended (VGA_30Hz or QVGA_60Hz)
 
 
 		interface->registerCallback (f);
