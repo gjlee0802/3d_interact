@@ -1,6 +1,9 @@
 
 #include <iostream>
 
+#include <queue>
+#include <cmath>	// for calculating distance between centr1 and centr2
+
 #include <pcl/io/openni2_grabber.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/point_types.h>
@@ -21,6 +24,8 @@ typedef pcl::PointXYZ PointT;
 using namespace std;
 
 
+float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
+
 class HandViewer
 {
 	public:
@@ -28,6 +33,8 @@ class HandViewer
 		int rm_cnt=0;
 		
 		int button_pressed=2;	// This should be changed simultaneously by arduino's informations
+		
+		queue<float> dis;	// Save distances between centr1 and centr2 in this vector container
 
 	void viewer_set()
 	{
@@ -143,11 +150,12 @@ class HandViewer
 				rm_cnt = j-1;//int 
 				// Euclidean Cluster Extraction END
 				*/
-
-				// K-means clustering START
-				// (Use when the number of hands are known as two...)
+				
 				if (button_pressed == 2)
 				{
+
+					// K-means clustering START
+                                	// (Use when the number of hands are known as two...)
 					pcl::Kmeans real(static_cast<int> (cloud_filtered->points.size()), 3);
 					real.setClusterSize(2);
 					for (size_t i = 0; i < cloud_filtered->points.size(); i++)	
@@ -161,7 +169,8 @@ class HandViewer
 
 					real.kMeans();
 					pcl::Kmeans::Centroids centroids = real.get_centroids();
-				
+					
+					std::cout << "===== K-means Cluster Extraction =====" << std::endl;
 					std::cout << "centroid count : " << centroids.size() << std::endl;
 					pcl::PointXYZ centr1, centr2;
 				
@@ -173,11 +182,37 @@ class HandViewer
 					centr2.y = centroids[1][1];
 					centr2.z = centroids[1][2];
 
+					std::cout << "centr1 : ("<< centr1.x << "," << centr1.y << ")"<<std::endl;
+					std::cout << "centr2 : ("<< centr2.x << "," << centr2.y << ")"<<std::endl;
+
 					viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "sphere_0");
 					viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
 					rm_cnt=1;	
+					// K-means clustering END
+				
+					// Get distance between centr1 and centr2
+					if (cloud_filtered->size()!=0)
+					{
+						dis.push(xy_distance(centr1, centr2));
+						std::cout << "xy_dis: " << dis.back() << std::endl;
+					}
+					if (dis.size()>10)	// 수정할 부분.. 거리의 변화에 따라 바꿔야 할 듯 
+					// (둘 사이의 거리가 거의 변화하지 않을 경우를 생각
+					// -> 만약 큐에 일정 개수 이상의 데이터가 쌓일 경우 앞부분부터 pop을 한다.)
+					// (거리가 일정 거리 이상 변화했을 경우를 생각
+					// -> 마우스를 컨트롤하고 while문을 통해 queue를 비운다.)
+					{
+						dis.pop();
+					}
+					std::cout <<"dis queue FRONT: " << dis.front() << std::endl;
+				
+				}else
+				{
+					while(!dis.empty())
+					{
+						std::cout << "[CLEAR] dis queue" << std::endl;
+					}
 				}
-				// K-means clustering END
 
 				// Get_max & min_coordinates
 				pcl::PointXYZ minPt, maxPt;
@@ -195,9 +230,18 @@ class HandViewer
 
 		interface->stop ();
 	}
-	
+
 	pcl::visualization::PCLVisualizer::Ptr viewer;
 };
+
+float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
+{
+        float distance;
+
+        distance = sqrt(pow(p1.x-p2.x, 2) + pow(p1.y-p2.y, 2));
+
+	return distance;
+}
 
 int main (int argc, char** argv)
 {

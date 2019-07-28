@@ -9,6 +9,10 @@
 /home/user/workspace/proj/depth.cpp
 iostream
 -
+queue
+-
+cmath
+-
 pcl/io/openni2_grabber.h
 -
 pcl/visualization/pcl_visualizer.h
