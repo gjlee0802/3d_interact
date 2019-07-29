@@ -187,41 +187,35 @@ class HandViewer
 				std::cout << "[REMOVE SHAPE]: ALL" << std::endl;
 				viewer->removeAllShapes();
 				// Reomve shapes END
-
 				
-				// Get_max & min_coordinates
 				
+				// Get_max_and_min_coordinates
 				// Get Z Minimum Point
 				int current_min_index = 0;
                                 pcl::PointXYZ z_min_Pt;
-				/*
-                                for(size_t i=0; i < cloud_filtered->points.size(); i++)
-                                {
-                                        if(cloud_filtered->points[i].z <= cloud_filtered->points[current_min_index].z)
-                                        {
-						current_min_index = i;
-					}	
-                                	
-                                }
-
-				z_min_Pt.x = cloud_filtered->points[current_min_index].x;
-                                z_min_Pt.y = cloud_filtered->points[current_min_index].y;
-                                z_min_Pt.z = cloud_filtered->points[current_min_index].z;
-                                viewer->addSphere(z_min_Pt, 0.1, 0.0, 0.0, 1.0, "z_min_Pt");
-				*/
-                                /*
 				pcl::PointXYZ minPt, maxPt;
+
                                 pcl::getMinMax3D (*cloud_filtered, minPt, maxPt);
                                 std::cout << "Min z: " << minPt.z << std::endl;
-                                minPt.x = 0.0;
-                                minPt.y = 0.0;
-				*/
 
+				for(size_t i=0; i < cloud_filtered->points.size(); i++)
+				{
+					if(cloud_filtered->points[i].z == minPt.z)
+					{
+						minPt.x = cloud_filtered->points[i].x;
+						minPt.y = cloud_filtered->points[i].y;
+						break;
+					}
+				}
+				std::cout << "minPt: ("<< minPt.x <<", "<< minPt.y <<")"<<std::endl;
+
+				std::stringstream text;
+				text << "("<<minPt.x<<", "<<minPt.y<<")";
+				viewer -> addText(text.str(), 10, 10, "text_minPt");
 				
 				// Handling Touch Box
                                 if (cloud_touch->size() != 0)
                                 {
-					std::cout << "cloud_touch->points.size(): " << cloud_touch->points.size() << std::endl;
 					
 					pcl::PointXYZ touchPt;
 
@@ -240,13 +234,17 @@ class HandViewer
                                 	touchPt.z = cloud_touch->points[current_min_index].z;
                                 	viewer->addSphere(touchPt, 0.1, 0.0, 0.0, 1.0, "touchPt");	
 
-                                        fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
+                                        fork_mouse_event(touchPt.x, touchPt.y, (char *)"move");
+					//fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
+
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 0.0, 1.0, 0.0);
                                 }else
 				{
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
 				}
 
+
+				// Two hand gesture handler
 				if (button_pressed == 2)
 				{
 
@@ -267,7 +265,6 @@ class HandViewer
 					pcl::Kmeans::Centroids centroids = real.get_centroids();
 					
 					std::cout << "===== K-means Cluster Extraction =====" << std::endl;
-					std::cout << "centroid count : " << centroids.size() << std::endl;
 					pcl::PointXYZ centr1, centr2;
 				
 					centr1.x = centroids[0][0];
