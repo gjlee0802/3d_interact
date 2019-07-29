@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include <queue>
-#include <cmath>	// for calculating distance between centr1 and centr2
+//#include <cmath>	// for calculating distance between centr1 and centr2
 
 #include <pcl/io/openni2_grabber.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -20,11 +20,13 @@
 
 #include <boost/thread.hpp>
 
+#include "proj/etc.hpp"
+
 typedef pcl::PointXYZ PointT;
 using namespace std;
 
 
-float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
+//float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
 
 class HandViewer
 {
@@ -237,6 +239,7 @@ class HandViewer
 	pcl::visualization::PCLVisualizer::Ptr viewer;
 };
 
+/*
 float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 {
         float distance;
@@ -245,6 +248,7 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 
 	return distance;
 }
+*/
 
 int main (int argc, char** argv)
 {

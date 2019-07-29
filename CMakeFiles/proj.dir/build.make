@@ -57,38 +57,64 @@ include CMakeFiles/proj.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/proj.dir/flags.make
 
-CMakeFiles/proj.dir/depth.cpp.o: CMakeFiles/proj.dir/flags.make
-CMakeFiles/proj.dir/depth.cpp.o: depth.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/user/workspace/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/proj.dir/depth.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/proj.dir/depth.cpp.o -c /home/user/workspace/proj/depth.cpp
+CMakeFiles/proj.dir/src/main.cpp.o: CMakeFiles/proj.dir/flags.make
+CMakeFiles/proj.dir/src/main.cpp.o: src/main.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/user/workspace/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/proj.dir/src/main.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/proj.dir/src/main.cpp.o -c /home/user/workspace/proj/src/main.cpp
 
-CMakeFiles/proj.dir/depth.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/proj.dir/depth.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user/workspace/proj/depth.cpp > CMakeFiles/proj.dir/depth.cpp.i
+CMakeFiles/proj.dir/src/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/proj.dir/src/main.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user/workspace/proj/src/main.cpp > CMakeFiles/proj.dir/src/main.cpp.i
 
-CMakeFiles/proj.dir/depth.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/proj.dir/depth.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user/workspace/proj/depth.cpp -o CMakeFiles/proj.dir/depth.cpp.s
+CMakeFiles/proj.dir/src/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/proj.dir/src/main.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user/workspace/proj/src/main.cpp -o CMakeFiles/proj.dir/src/main.cpp.s
 
-CMakeFiles/proj.dir/depth.cpp.o.requires:
+CMakeFiles/proj.dir/src/main.cpp.o.requires:
 
-.PHONY : CMakeFiles/proj.dir/depth.cpp.o.requires
+.PHONY : CMakeFiles/proj.dir/src/main.cpp.o.requires
 
-CMakeFiles/proj.dir/depth.cpp.o.provides: CMakeFiles/proj.dir/depth.cpp.o.requires
-	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/depth.cpp.o.provides.build
-.PHONY : CMakeFiles/proj.dir/depth.cpp.o.provides
+CMakeFiles/proj.dir/src/main.cpp.o.provides: CMakeFiles/proj.dir/src/main.cpp.o.requires
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/main.cpp.o.provides.build
+.PHONY : CMakeFiles/proj.dir/src/main.cpp.o.provides
 
-CMakeFiles/proj.dir/depth.cpp.o.provides.build: CMakeFiles/proj.dir/depth.cpp.o
+CMakeFiles/proj.dir/src/main.cpp.o.provides.build: CMakeFiles/proj.dir/src/main.cpp.o
+
+
+CMakeFiles/proj.dir/src/etc.cpp.o: CMakeFiles/proj.dir/flags.make
+CMakeFiles/proj.dir/src/etc.cpp.o: src/etc.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/user/workspace/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/proj.dir/src/etc.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/proj.dir/src/etc.cpp.o -c /home/user/workspace/proj/src/etc.cpp
+
+CMakeFiles/proj.dir/src/etc.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/proj.dir/src/etc.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/user/workspace/proj/src/etc.cpp > CMakeFiles/proj.dir/src/etc.cpp.i
+
+CMakeFiles/proj.dir/src/etc.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/proj.dir/src/etc.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/user/workspace/proj/src/etc.cpp -o CMakeFiles/proj.dir/src/etc.cpp.s
+
+CMakeFiles/proj.dir/src/etc.cpp.o.requires:
+
+.PHONY : CMakeFiles/proj.dir/src/etc.cpp.o.requires
+
+CMakeFiles/proj.dir/src/etc.cpp.o.provides: CMakeFiles/proj.dir/src/etc.cpp.o.requires
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/etc.cpp.o.provides.build
+.PHONY : CMakeFiles/proj.dir/src/etc.cpp.o.provides
+
+CMakeFiles/proj.dir/src/etc.cpp.o.provides.build: CMakeFiles/proj.dir/src/etc.cpp.o
 
 
 # Object files for target proj
 proj_OBJECTS = \
-"CMakeFiles/proj.dir/depth.cpp.o"
+"CMakeFiles/proj.dir/src/main.cpp.o" \
+"CMakeFiles/proj.dir/src/etc.cpp.o"
 
 # External object files for target proj
 proj_EXTERNAL_OBJECTS =
 
-proj: CMakeFiles/proj.dir/depth.cpp.o
+proj: CMakeFiles/proj.dir/src/main.cpp.o
+proj: CMakeFiles/proj.dir/src/etc.cpp.o
 proj: CMakeFiles/proj.dir/build.make
 proj: /usr/local/lib/libpcl_apps.so
 proj: /usr/local/lib/libpcl_cuda_io.so
@@ -214,7 +240,7 @@ proj: /usr/lib/x86_64-linux-gnu/libexpat.so
 proj: /usr/lib/x86_64-linux-gnu/libboost_atomic.so
 proj: /usr/lib/x86_64-linux-gnu/libpthread.so
 proj: CMakeFiles/proj.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/user/workspace/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable proj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/user/workspace/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable proj"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/proj.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -222,7 +248,8 @@ CMakeFiles/proj.dir/build: proj
 
 .PHONY : CMakeFiles/proj.dir/build
 
-CMakeFiles/proj.dir/requires: CMakeFiles/proj.dir/depth.cpp.o.requires
+CMakeFiles/proj.dir/requires: CMakeFiles/proj.dir/src/main.cpp.o.requires
+CMakeFiles/proj.dir/requires: CMakeFiles/proj.dir/src/etc.cpp.o.requires
 
 .PHONY : CMakeFiles/proj.dir/requires
 

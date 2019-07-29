@@ -4,7 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/user/workspace/proj/depth.cpp" "/home/user/workspace/proj/CMakeFiles/proj.dir/depth.cpp.o"
+  "/home/user/workspace/proj/src/etc.cpp" "/home/user/workspace/proj/CMakeFiles/proj.dir/src/etc.cpp.o"
+  "/home/user/workspace/proj/src/main.cpp" "/home/user/workspace/proj/CMakeFiles/proj.dir/src/main.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -27,6 +28,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/usr/include/eigen3"
   "/usr/include/ni"
   "/usr/include/openni2"
+  "./include"
   )
 
 # Targets to which this target links.

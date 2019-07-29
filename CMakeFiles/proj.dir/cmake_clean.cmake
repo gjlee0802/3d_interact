@@ -1,5 +1,6 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/proj.dir/depth.cpp.o"
+  "CMakeFiles/proj.dir/src/main.cpp.o"
+  "CMakeFiles/proj.dir/src/etc.cpp.o"
   "proj.pdb"
   "proj"
 )

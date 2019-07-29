@@ -15,5 +15,9 @@ include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable (proj depth.cpp)
+SET(SRC_FILES src/main.cpp src/etc.cpp)
+
+include_directories(./include)
+
+add_executable (proj ${SRC_FILES})
 target_link_libraries (proj ${PCL_LIBRARIES} ${Boost_LIBRARIES})

@@ -123,32 +123,59 @@ proj/fast:
 	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/build
 .PHONY : proj/fast
 
-depth.o: depth.cpp.o
+src/etc.o: src/etc.cpp.o
 
-.PHONY : depth.o
+.PHONY : src/etc.o
 
 # target to build an object file
-depth.cpp.o:
-	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/depth.cpp.o
-.PHONY : depth.cpp.o
+src/etc.cpp.o:
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/etc.cpp.o
+.PHONY : src/etc.cpp.o
 
-depth.i: depth.cpp.i
+src/etc.i: src/etc.cpp.i
 
-.PHONY : depth.i
+.PHONY : src/etc.i
 
 # target to preprocess a source file
-depth.cpp.i:
-	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/depth.cpp.i
-.PHONY : depth.cpp.i
+src/etc.cpp.i:
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/etc.cpp.i
+.PHONY : src/etc.cpp.i
 
-depth.s: depth.cpp.s
+src/etc.s: src/etc.cpp.s
 
-.PHONY : depth.s
+.PHONY : src/etc.s
 
 # target to generate assembly for a file
-depth.cpp.s:
-	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/depth.cpp.s
-.PHONY : depth.cpp.s
+src/etc.cpp.s:
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/etc.cpp.s
+.PHONY : src/etc.cpp.s
+
+src/main.o: src/main.cpp.o
+
+.PHONY : src/main.o
+
+# target to build an object file
+src/main.cpp.o:
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
+
+src/main.i: src/main.cpp.i
+
+.PHONY : src/main.i
+
+# target to preprocess a source file
+src/main.cpp.i:
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
+
+src/main.s: src/main.cpp.s
+
+.PHONY : src/main.s
+
+# target to generate assembly for a file
+src/main.cpp.s:
+	$(MAKE) -f CMakeFiles/proj.dir/build.make CMakeFiles/proj.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
 # Help Target
 help:
@@ -159,9 +186,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... proj"
 	@echo "... edit_cache"
-	@echo "... depth.o"
-	@echo "... depth.i"
-	@echo "... depth.s"
+	@echo "... src/etc.o"
+	@echo "... src/etc.i"
+	@echo "... src/etc.s"
+	@echo "... src/main.o"
+	@echo "... src/main.i"
+	@echo "... src/main.s"
 .PHONY : help
 
 

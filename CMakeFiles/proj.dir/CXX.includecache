@@ -6,12 +6,20 @@
 
 #IncludeRegexTransform: 
 
-/home/user/workspace/proj/depth.cpp
+./include/proj/etc.hpp
+cmath
+-
+pcl/point_types.h
+-
+
+/home/user/workspace/proj/src/etc.cpp
+proj/etc.hpp
+/home/user/workspace/proj/src/proj/etc.hpp
+
+/home/user/workspace/proj/src/main.cpp
 iostream
 -
 queue
--
-cmath
 -
 pcl/io/openni2_grabber.h
 -
@@ -37,6 +45,8 @@ pcl/ml/kmeans.h
 -
 boost/thread.hpp
 -
+proj/etc.hpp
+/home/user/workspace/proj/src/proj/etc.hpp
 
 /usr/include/eigen3/Eigen/Cholesky
 Core
