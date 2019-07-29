@@ -47,12 +47,104 @@ class HandViewer
 		viewer->setCameraPosition(0,0,-3.0, 0.0,0.0,0.0, 0.0,0.0,0.0, 0);
 	}
 
+	void draw_tp_box(float z_min, float z_max, double _r,  double _g, double _b)
+	{
+		pcl::PointXYZ a;
+		pcl::PointXYZ b;
+
+		float width = 8.0;
+		float height = 6.0;
+
+		a.x = width/2*(-1.0);
+		a.y = height/2;
+		a.z = z_max;
+		b.x = width/2;
+		b.y = height/2;
+		b.z = z_max;
+		viewer->addLine(a, b, _r,_g,_b, "line_x_1");
+
+		a.x = width/2*(-1.0);
+                a.y = height/2*(-1.0);
+                a.z = z_max;
+                b.x = width/2;
+                b.y = height/2*(-1.0);
+                b.z = z_max;
+		viewer->addLine(a, b, _r,_g,_b, "line_x_2");
+
+		a.x = width/2*(-1.0);
+                a.y = height/2*(-1.0);
+                a.z = z_min;
+                b.x = width/2;
+                b.y = height/2*(-1.0);
+                b.z = z_min;
+                viewer->addLine(a, b, _r,_g,_b, "line_x_3");
+
+		a.x = width/2*(-1.0);
+                a.y = height/2;
+                a.z = z_min;
+                b.x = width/2;
+                b.y = height/2;
+                b.z = z_min;
+                viewer->addLine(a, b, _r,_g,_b, "line_x_4");
+
+		a.x = width/2*(-1.0);
+                a.y = height/2;
+                a.z = z_max;
+                b.x = width/2*(-1.0);
+                b.y = height/2*(-1.0);
+                b.z = z_max;
+                viewer->addLine(a, b, _r,_g,_b, "line_y_1");
+
+		a.x = width/2;
+                a.y = height/2;
+                a.z = z_max;
+                b.x = width/2;
+                b.y = height/2*(-1.0);
+                b.z = z_max;
+                viewer->addLine(a, b, _r,_g,_b, "line_y_2");
+
+		a.x = width/2;
+                a.y = height/2;
+                a.z = z_min;
+                b.x = width/2;
+                b.y = height/2*(-1.0);
+                b.z = z_min;
+                viewer->addLine(a, b, _r,_g,_b, "line_y_3");
+
+		a.x = width/2*(-1.0);
+                a.y = height/2;
+                a.z = z_min;
+                b.x = width/2*(-1.0);
+                b.y = height/2*(-1.0);
+                b.z = z_min;
+                viewer->addLine(a, b, _r,_g,_b, "line_y_4");
+
+		a.x = width/2*(-1.0);
+                a.y = height/2;
+                a.z = z_min;
+                b.x = width/2;
+                b.y = height/2*(-1.0);
+                b.z = z_min;
+                viewer->addLine(a, b, _r,_g,_b, "line_d_min1");
+
+		a.x = width/2;
+                a.y = height/2;
+                a.z = z_min;
+                b.x = width/2*(-1.0);
+                b.y = height/2*(-1.0);
+                b.z = z_min;
+                viewer->addLine(a, b, _r,_g,_b, "line_d_min2");
+
+	}
+
 	void run ()
 	{
 		boost::mutex mutex;
+		int rm_cnt;	// for remove shapes
 
 		pcl::PointCloud<PointT>::ConstPtr cloud (new pcl::PointCloud<PointT>);
 		pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
+		pcl::PointCloud<PointT>::Ptr cloud_touch (new pcl::PointCloud<PointT>);
 
 		std::function<void (const pcl::PointCloud<PointT>::ConstPtr&)> f =
 		[&cloud, &mutex](const pcl::PointCloud<PointT>::ConstPtr &ptr ){
@@ -73,18 +165,6 @@ class HandViewer
 		// Create the PassThrough Filtering object
 		pcl::PassThrough<PointT> pass;
 
-		/*
-		// Create the KdTree object for the search method of the extraction
-		pcl::search::KdTree<PointT>::Ptr tree (new pcl::search::KdTree<PointT>);
-		// for Euclidian Cluster
-		std::vector<pcl::PointIndices> cluster_indices;
-		pcl::EuclideanClusterExtraction<PointT> ec;
-  		ec.setClusterTolerance (0.1); // 0.01 -> 1cm
-  		ec.setMinClusterSize (300);
-  		ec.setMaxClusterSize (20000); // 10000
-		*/
-
-		//int rm_cnt=0;
 		while (!viewer->wasStopped())
 		{
 			viewer->spinOnce();
@@ -101,60 +181,19 @@ class HandViewer
 				pass.setFilterFieldName("z");
 				pass.setFilterLimits(0.0, 11.0);//9.0
 				pass.filter(*cloud_filtered);
+
+				pass.setInputCloud(cloud_filtered);
+				pass.setFilterLimits(4.8, 5.0);
+				pass.filter(*cloud_touch);	// This cloud_touch will be in Touch Box Field
 				// PassThrough Filtering END
 
 				
 
 				// Remove shapes to update shapes START
-				std::cout << "===== REMOVE SHAPE =====" << std::endl;
-				for(;rm_cnt >= 0; rm_cnt--)
-				{
-					std::stringstream remove_id;
-					remove_id << "sphere_"<< rm_cnt;
-					
-					std::cout << "removeSphere id : " << remove_id.str() << std::endl;
-
-					viewer->removeShape(remove_id.str());
-
-					viewer->removeShape("minPt_z");
-				}
+				std::cout << "[REMOVE SHAPE]: ALL" << std::endl;
+				viewer->removeAllShapes();
 				// Reomve shapes END
 
-
-				/*
-				// To recognize the number of hands
-                                // Euclidean Cluster Extraction START
-                                std::vector<pcl::PointIndices> cluster_indices;
-                            	// ec : Euclidian Cluster Object || tree : KdTree Object
-                                tree->setInputCloud (cloud_filtered);
-                                ec.setSearchMethod (tree);
-                                ec.setInputCloud (cloud_filtered);
-                                ec.extract (cluster_indices);
-				
-					
-				std::cout << "===== NEW CLUSTER =====" << std::endl;
-				int j = 0;
-				for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
-				{
-					pcl::PointCloud<PointT>::Ptr cloud_cluster (new pcl::PointCloud<PointT>);
-					for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-						cloud_cluster->points.push_back (cloud_filtered->points[*pit]);
-					cloud_cluster->width = cloud_cluster->points.size ();
-					cloud_cluster->height = 1;
-					cloud_cluster->is_dense = true;
-
-    					std::cout << "cloud_cluster["<<j<<"] representing the Cluster: " << cloud_cluster->points.size () << " data points." << std::endl;
-    					
-					std::stringstream sphere_id;
-					sphere_id << "sphere_" << j;
-
-					viewer->addSphere(cloud_cluster->points[0], 0.1, 1.0, 0.0, 0.0, sphere_id.str());
-
-    					j++;
-  				}
-				rm_cnt = j-1;//int 
-				// Euclidean Cluster Extraction END
-				*/
 				
 				// Get_max & min_coordinates
                                 pcl::PointXYZ minPt, maxPt;
@@ -162,13 +201,16 @@ class HandViewer
                                 std::cout << "Min z: " << minPt.z << std::endl;
                                 minPt.x = 0.0;
                                 minPt.y = 0.0;
-
+				
 				// MOUSE EVENT TEST (WARN : JUST TEST! THIS GONNA BE MODIFIED LATER!)
-                                if (minPt.z<5.0)
+                                if (cloud_touch->size() != 0)
                                 {
                                         fork_mouse_event((char *)"click");
-                                }
-
+					draw_tp_box(4.8, 5.0, 0.0, 1.0, 0.0);
+                                }else
+				{
+					draw_tp_box(4.8, 5.0, 1.0, 0.0, 0.0);
+				}
 
 				if (button_pressed == 2)
 				{
@@ -206,11 +248,10 @@ class HandViewer
 
 					viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "sphere_0");
 					viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
-					rm_cnt=1;	
 					// K-means clustering END
 				
 					// Get distance between centr1 and centr2
-					if (cloud_filtered->size()!=0)
+					if (cloud_filtered->size() != 0)
 					{
 						dis.push(xy_distance(centr1, centr2));
 						std::cout << "xy_dis: " << dis.back() << std::endl;
