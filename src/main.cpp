@@ -1,3 +1,5 @@
+#ifndef __MAIN_HEADER__
+#define __MAIN_HEADER__
 
 #include <iostream>
 
@@ -20,6 +22,8 @@
 #include <boost/thread.hpp>
 
 #include "proj/etc.hpp"
+
+#endif
 
 typedef pcl::PointXYZ PointT;
 using namespace std;
@@ -87,6 +91,8 @@ class HandViewer
 			boost::mutex::scoped_try_lock lock( mutex );
 			if( lock.owns_lock())
 			{
+				std::cout << "-----------------------------------------------------------" << std::endl;
+
 				// Print cloud->size()
 				std::cout << "cloud size : " << cloud->size() << std::endl;
 
@@ -150,6 +156,20 @@ class HandViewer
 				// Euclidean Cluster Extraction END
 				*/
 				
+				// Get_max & min_coordinates
+                                pcl::PointXYZ minPt, maxPt;
+                                pcl::getMinMax3D (*cloud_filtered, minPt, maxPt);
+                                std::cout << "Min z: " << minPt.z << std::endl;
+                                minPt.x = 0.0;
+                                minPt.y = 0.0;
+
+				// MOUSE EVENT TEST (WARN : JUST TEST! THIS GONNA BE MODIFIED LATER!)
+                                if (minPt.z<5.0)
+                                {
+                                        fork_mouse_event((char *)"click");
+                                }
+
+
 				if (button_pressed == 2)
 				{
 
@@ -216,15 +236,9 @@ class HandViewer
 
 				}
 
-				// Get_max & min_coordinates
-				pcl::PointXYZ minPt, maxPt;
-				pcl::getMinMax3D (*cloud_filtered, minPt, maxPt);
-				std::cout << "Min z: " << minPt.z << std::endl;
-				minPt.x = 0.0;
-				minPt.y = 0.0;
+				// Update viewer
 				viewer->addSphere(minPt, 0.1, 0.0, 0.0, 1.0, "minPt_z");
 
-				// Update Cloud
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
 			}
