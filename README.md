@@ -7,4 +7,9 @@ Smart System Competition Proj
 
 ./src 소스 파일
 ./include 헤더 파일
-./bin 실행 파일
+
+사전 설치
+
+Point Cloud Library
+
+Xdotool

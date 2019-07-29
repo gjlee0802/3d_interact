@@ -392,20 +392,6 @@ CMakeFiles/proj.dir/src/main.cpp.o
  /usr/include/eigen3/Eigen/src/plugins/CommonCwiseUnaryOps.h
  /usr/include/eigen3/Eigen/src/plugins/MatrixCwiseBinaryOps.h
  /usr/include/eigen3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
- /usr/include/eigen3/unsupported/Eigen/NonLinearOptimization
- /usr/include/eigen3/unsupported/Eigen/NumericalDiff
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/HybridNonLinearSolver.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/LevenbergMarquardt.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/chkder.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/covar.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/dogleg.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/fdjac1.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/lmpar.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/qrsolv.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/r1mpyq.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/r1updt.h
- /usr/include/eigen3/unsupported/Eigen/src/NonLinearOptimization/rwupdt.h
- /usr/include/eigen3/unsupported/Eigen/src/NumericalDiff/NumericalDiff.h
  /usr/include/openni2/Android-Arm/OniPlatformAndroid-Arm.h
  /usr/include/openni2/Linux-Arm/OniPlatformLinux-Arm.h
  /usr/include/openni2/Linux-generic/OniPlatformLinux-generic.h
@@ -573,48 +559,32 @@ CMakeFiles/proj.dir/src/main.cpp.o
  /usr/local/include/pcl-1.9/pcl/PolygonMesh.h
  /usr/local/include/pcl-1.9/pcl/TextureMesh.h
  /usr/local/include/pcl-1.9/pcl/Vertices.h
- /usr/local/include/pcl-1.9/pcl/cloud_iterator.h
- /usr/local/include/pcl-1.9/pcl/common/centroid.h
  /usr/local/include/pcl-1.9/pcl/common/colors.h
  /usr/local/include/pcl-1.9/pcl/common/common.h
  /usr/local/include/pcl-1.9/pcl/common/concatenate.h
  /usr/local/include/pcl-1.9/pcl/common/copy_point.h
- /usr/local/include/pcl-1.9/pcl/common/distances.h
  /usr/local/include/pcl-1.9/pcl/common/eigen.h
- /usr/local/include/pcl-1.9/pcl/common/impl/accumulators.hpp
- /usr/local/include/pcl-1.9/pcl/common/impl/centroid.hpp
  /usr/local/include/pcl-1.9/pcl/common/impl/common.hpp
  /usr/local/include/pcl-1.9/pcl/common/impl/copy_point.hpp
  /usr/local/include/pcl-1.9/pcl/common/impl/eigen.hpp
  /usr/local/include/pcl-1.9/pcl/common/impl/io.hpp
- /usr/local/include/pcl-1.9/pcl/common/impl/projection_matrix.hpp
  /usr/local/include/pcl-1.9/pcl/common/io.h
  /usr/local/include/pcl-1.9/pcl/common/point_tests.h
- /usr/local/include/pcl-1.9/pcl/common/projection_matrix.h
  /usr/local/include/pcl-1.9/pcl/common/synchronizer.h
- /usr/local/include/pcl-1.9/pcl/common/time.h
  /usr/local/include/pcl-1.9/pcl/console/parse.h
  /usr/local/include/pcl-1.9/pcl/console/print.h
  /usr/local/include/pcl-1.9/pcl/conversions.h
  /usr/local/include/pcl-1.9/pcl/correspondence.h
  /usr/local/include/pcl-1.9/pcl/exceptions.h
- /usr/local/include/pcl-1.9/pcl/features/feature.h
- /usr/local/include/pcl-1.9/pcl/features/impl/feature.hpp
- /usr/local/include/pcl-1.9/pcl/features/impl/normal_3d.hpp
- /usr/local/include/pcl-1.9/pcl/features/normal_3d.h
  /usr/local/include/pcl-1.9/pcl/filters/boost.h
- /usr/local/include/pcl-1.9/pcl/filters/extract_indices.h
  /usr/local/include/pcl-1.9/pcl/filters/filter.h
  /usr/local/include/pcl-1.9/pcl/filters/filter_indices.h
- /usr/local/include/pcl-1.9/pcl/filters/impl/extract_indices.hpp
  /usr/local/include/pcl-1.9/pcl/filters/impl/filter.hpp
  /usr/local/include/pcl-1.9/pcl/filters/impl/filter_indices.hpp
  /usr/local/include/pcl-1.9/pcl/filters/impl/passthrough.hpp
  /usr/local/include/pcl-1.9/pcl/filters/passthrough.h
  /usr/local/include/pcl-1.9/pcl/for_each_type.h
  /usr/local/include/pcl-1.9/pcl/geometry/planar_polygon.h
- /usr/local/include/pcl-1.9/pcl/impl/cloud_iterator.hpp
- /usr/local/include/pcl-1.9/pcl/impl/instantiate.hpp
  /usr/local/include/pcl-1.9/pcl/impl/pcl_base.hpp
  /usr/local/include/pcl-1.9/pcl/impl/point_types.hpp
  /usr/local/include/pcl-1.9/pcl/io/boost.h
@@ -633,90 +603,15 @@ CMakeFiles/proj.dir/src/main.cpp.o
  /usr/local/include/pcl-1.9/pcl/io/openni2/openni2_device_manager.h
  /usr/local/include/pcl-1.9/pcl/io/openni2/openni2_video_mode.h
  /usr/local/include/pcl-1.9/pcl/io/openni2_grabber.h
- /usr/local/include/pcl-1.9/pcl/kdtree/impl/kdtree_flann.hpp
- /usr/local/include/pcl-1.9/pcl/kdtree/kdtree.h
- /usr/local/include/pcl-1.9/pcl/kdtree/kdtree_flann.h
  /usr/local/include/pcl-1.9/pcl/ml/kmeans.h
- /usr/local/include/pcl-1.9/pcl/octree/impl/octree_base.hpp
- /usr/local/include/pcl-1.9/pcl/octree/impl/octree_iterator.hpp
- /usr/local/include/pcl-1.9/pcl/octree/impl/octree_pointcloud.hpp
- /usr/local/include/pcl-1.9/pcl/octree/impl/octree_search.hpp
- /usr/local/include/pcl-1.9/pcl/octree/octree_base.h
- /usr/local/include/pcl-1.9/pcl/octree/octree_container.h
- /usr/local/include/pcl-1.9/pcl/octree/octree_iterator.h
- /usr/local/include/pcl-1.9/pcl/octree/octree_key.h
- /usr/local/include/pcl-1.9/pcl/octree/octree_nodes.h
- /usr/local/include/pcl-1.9/pcl/octree/octree_pointcloud.h
- /usr/local/include/pcl-1.9/pcl/octree/octree_search.h
  /usr/local/include/pcl-1.9/pcl/pcl_base.h
  /usr/local/include/pcl-1.9/pcl/pcl_config.h
  /usr/local/include/pcl-1.9/pcl/pcl_exports.h
  /usr/local/include/pcl-1.9/pcl/pcl_macros.h
  /usr/local/include/pcl-1.9/pcl/point_cloud.h
- /usr/local/include/pcl-1.9/pcl/point_representation.h
  /usr/local/include/pcl-1.9/pcl/point_traits.h
  /usr/local/include/pcl-1.9/pcl/point_types.h
  /usr/local/include/pcl-1.9/pcl/register_point_struct.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/boost.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/eigen.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/lmeds.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/mlesac.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/msac.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/prosac.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/ransac.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/rmsac.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/rransac.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_circle.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_circle3d.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_cone.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_cylinder.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_line.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_normal_parallel_plane.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_normal_plane.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_normal_sphere.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_parallel_line.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_parallel_plane.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_perpendicular_plane.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_plane.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_sphere.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/impl/sac_model_stick.hpp
- /usr/local/include/pcl-1.9/pcl/sample_consensus/lmeds.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/method_types.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/mlesac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/model_types.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/msac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/prosac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/ransac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/rmsac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/rransac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_circle.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_circle3d.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_cone.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_cylinder.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_line.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_normal_parallel_plane.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_normal_plane.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_normal_sphere.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_parallel_line.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_parallel_plane.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_perpendicular_plane.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_plane.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_sphere.h
- /usr/local/include/pcl-1.9/pcl/sample_consensus/sac_model_stick.h
- /usr/local/include/pcl-1.9/pcl/search/impl/kdtree.hpp
- /usr/local/include/pcl-1.9/pcl/search/impl/organized.hpp
- /usr/local/include/pcl-1.9/pcl/search/impl/search.hpp
- /usr/local/include/pcl-1.9/pcl/search/kdtree.h
- /usr/local/include/pcl-1.9/pcl/search/octree.h
- /usr/local/include/pcl-1.9/pcl/search/organized.h
- /usr/local/include/pcl-1.9/pcl/search/pcl_search.h
- /usr/local/include/pcl-1.9/pcl/search/search.h
- /usr/local/include/pcl-1.9/pcl/segmentation/extract_clusters.h
- /usr/local/include/pcl-1.9/pcl/segmentation/impl/extract_clusters.hpp
- /usr/local/include/pcl-1.9/pcl/segmentation/impl/sac_segmentation.hpp
- /usr/local/include/pcl-1.9/pcl/segmentation/sac_segmentation.h
  /usr/local/include/pcl-1.9/pcl/visualization/area_picking_event.h
  /usr/local/include/pcl-1.9/pcl/visualization/boost.h
  /usr/local/include/pcl-1.9/pcl/visualization/common/actor_map.h

@@ -9,14 +9,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
-
 #include <pcl/filters/passthrough.h>
-#include <pcl/filters/extract_indices.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/kdtree/kdtree.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/segmentation/extract_clusters.h>	//	for Euclidian Cluster Extraction
-
 #include <pcl/ml/kmeans.h>	//	for K-means Cluster Extraction
 
 #include <boost/thread.hpp>
@@ -44,7 +37,7 @@ class HandViewer
 		viewer->setFullScreen(false);
 		viewer->setSize(1280, 960);
 		//viewer->addCoordinateSystem(1.0);
-		viewer->setCameraPosition(0,0,-3.0, 0.0,0.0,0.0, 0.0,0.0,0.0, 0);
+		viewer->setCameraPosition(0,0,-6.0, 0.0,0.0,0.0, 0.0,0.0,0.0, 0);
 	}
 
 	void draw_tp_box(float z_min, float z_max, double _r,  double _g, double _b)
@@ -140,7 +133,9 @@ class HandViewer
 	void run ()
 	{
 		boost::mutex mutex;
-		int rm_cnt;	// for remove shapes
+
+		float touch_box_min_z=6.2;
+		float touch_box_max_z=6.4;
 
 		pcl::PointCloud<PointT>::ConstPtr cloud (new pcl::PointCloud<PointT>);
 		pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
@@ -179,16 +174,15 @@ class HandViewer
 				// PassThrough Filtering START
 				pass.setInputCloud(cloud);
 				pass.setFilterFieldName("z");
-				pass.setFilterLimits(0.0, 11.0);//9.0
+				pass.setFilterLimits(0.0, 11.0);
 				pass.filter(*cloud_filtered);
 
 				pass.setInputCloud(cloud_filtered);
-				pass.setFilterLimits(4.8, 5.0);
+				pass.setFilterLimits(touch_box_min_z, touch_box_max_z);
 				pass.filter(*cloud_touch);	// This cloud_touch will be in Touch Box Field
 				// PassThrough Filtering END
 
 				
-
 				// Remove shapes to update shapes START
 				std::cout << "[REMOVE SHAPE]: ALL" << std::endl;
 				viewer->removeAllShapes();
@@ -196,20 +190,61 @@ class HandViewer
 
 				
 				// Get_max & min_coordinates
-                                pcl::PointXYZ minPt, maxPt;
+				
+				// Get Z Minimum Point
+				int current_min_index = 0;
+                                pcl::PointXYZ z_min_Pt;
+				/*
+                                for(size_t i=0; i < cloud_filtered->points.size(); i++)
+                                {
+                                        if(cloud_filtered->points[i].z <= cloud_filtered->points[current_min_index].z)
+                                        {
+						current_min_index = i;
+					}	
+                                	
+                                }
+
+				z_min_Pt.x = cloud_filtered->points[current_min_index].x;
+                                z_min_Pt.y = cloud_filtered->points[current_min_index].y;
+                                z_min_Pt.z = cloud_filtered->points[current_min_index].z;
+                                viewer->addSphere(z_min_Pt, 0.1, 0.0, 0.0, 1.0, "z_min_Pt");
+				*/
+                                /*
+				pcl::PointXYZ minPt, maxPt;
                                 pcl::getMinMax3D (*cloud_filtered, minPt, maxPt);
                                 std::cout << "Min z: " << minPt.z << std::endl;
                                 minPt.x = 0.0;
                                 minPt.y = 0.0;
+				*/
+
 				
-				// MOUSE EVENT TEST (WARN : JUST TEST! THIS GONNA BE MODIFIED LATER!)
+				// Handling Touch Box
                                 if (cloud_touch->size() != 0)
                                 {
-                                        fork_mouse_event((char *)"click");
-					draw_tp_box(4.8, 5.0, 0.0, 1.0, 0.0);
+					std::cout << "cloud_touch->points.size(): " << cloud_touch->points.size() << std::endl;
+					
+					pcl::PointXYZ touchPt;
+
+                                	current_min_index = 0;
+                                	for(size_t i=0; i < cloud_touch->points.size(); i++)
+                                	{
+                                        	if(cloud_touch->points[i].z <= cloud_touch->points[current_min_index].z)
+                                        	{
+                                                	current_min_index = i;
+                                        	}
+
+                                	}
+
+                                	touchPt.x = cloud_touch->points[current_min_index].x;
+                               		touchPt.y = cloud_touch->points[current_min_index].y;
+                                	touchPt.z = cloud_touch->points[current_min_index].z;
+                                	viewer->addSphere(touchPt, 0.1, 0.0, 0.0, 1.0, "touchPt");	
+
+                                        fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
+					draw_tp_box(touch_box_min_z, touch_box_max_z, 0.0, 1.0, 0.0);
                                 }else
 				{
-					draw_tp_box(4.8, 5.0, 1.0, 0.0, 0.0);
+					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
 				}
 
 				if (button_pressed == 2)
@@ -278,7 +313,8 @@ class HandViewer
 				}
 
 				// Update viewer
-				viewer->addSphere(minPt, 0.1, 0.0, 0.0, 1.0, "minPt_z");
+				
+				//viewer->addSphere(minPt, 0.1, 0.0, 0.0, 1.0, "minPt_z");
 
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");

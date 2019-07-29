@@ -8,4 +8,4 @@
 
 float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
 
-int fork_mouse_event(char *);
+int fork_mouse_event(float, float, char *);

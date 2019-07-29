@@ -9,7 +9,7 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
         return distance;
 }
 
-int fork_mouse_event(char * command)
+int fork_mouse_event(float x, float y, char * command)
 {
 	pid_t pid;
 
