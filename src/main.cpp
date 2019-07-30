@@ -174,7 +174,7 @@ class HandViewer
 				// PassThrough Filtering START
 				pass.setInputCloud(cloud);
 				pass.setFilterFieldName("z");
-				pass.setFilterLimits(0.0, 11.0);
+				pass.setFilterLimits(0.0, 11.0); //0.0~11.0 in QVGA || 0.0~1.0 in VGA
 				pass.filter(*cloud_filtered);
 
 				pass.setInputCloud(cloud_filtered);

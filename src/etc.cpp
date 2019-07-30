@@ -16,7 +16,7 @@ int fork_mouse_event(float x, float y, char * command)
 
 	// Change to moniter's coordinates (This should be changed later! NOT FINISHED)
 	x = 910 + (x*100*2);
-	y = 540 + (y*100*2);
+	y = 540 + (y*100*2)*(-1);
 	// Casting: (int) to (char *)
 	sprintf(x_buff, "%d", (int)x);
 	sprintf(y_buff, "%d", (int)y);
