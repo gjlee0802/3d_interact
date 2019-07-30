@@ -211,7 +211,7 @@ class HandViewer
 
 				std::stringstream text;
 				text << "("<<minPt.x<<", "<<minPt.y<<")";
-				viewer -> addText(text.str(), 10, 10, "text_minPt");
+				//viewer -> addText(text.str(), 10, 10, "text_minPt");
 				
 				// Handling Touch Box
                                 if (cloud_touch->size() != 0)
@@ -245,7 +245,7 @@ class HandViewer
 
 
 				// Two hand gesture handler
-				if (button_pressed == 2)
+				if (button_pressed == 2 && cloud_filtered->size() != 0)
 				{
 
 					// K-means clustering START
@@ -283,12 +283,10 @@ class HandViewer
 					// K-means clustering END
 				
 					// Get distance between centr1 and centr2
-					if (cloud_filtered->size() != 0)
-					{
-						dis.push(xy_distance(centr1, centr2));
-						std::cout << "xy_dis: " << dis.back() << std::endl;
-					}
-					if (dis.size()>10)	// 수정할 부분.. 거리의 변화에 따라 바꿔야 할 듯 
+					dis.push(xy_distance(centr1, centr2));
+					std::cout << "xy_dis: " << dis.back() << std::endl;
+					
+					if (dis.size()>3)	// 수정할 부분.. 거리의 변화에 따라 바꿔야 할 듯 
 					// (둘 사이의 거리가 거의 변화하지 않을 경우를 생각
 					// -> 만약 큐에 일정 개수 이상의 데이터가 쌓일 경우 앞부분부터 pop을 한다.)
 					// (거리가 일정 거리 이상 변화했을 경우를 생각
@@ -297,6 +295,53 @@ class HandViewer
 						dis.pop();
 					}
 					std::cout <<"dis queue FRONT: " << dis.front() << std::endl;
+					
+					pcl::PointXYZ scroll;
+
+					scroll.x = 0.0; scroll.y = 0.0; scroll.z = 5.0;
+					
+					float dis_variation = dis.back() - dis.front();
+					
+					float temp = dis.back();
+
+					std::cout << "dis_variation: " << dis_variation << std::endl;
+					
+					char text[256];
+					sprintf(text, "%f", dis_variation);
+					viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "var");
+
+					if (dis_variation  > 0.05)	//0.01/0.05?? 상황에 따라 조절
+					{
+						viewer->addSphere(scroll, 0.5, 0.0, 0.0, 1.0, "scroll");
+						std::cout << "+++++++++SCROLL UP" << std::endl;
+						std::cout << "[CLEAR]: dis queue" << std::endl;
+						/*
+                                        	while(!dis.empty())
+                                        	{
+                                                	dis.pop();
+                                        	}
+						dis.push(temp);
+                                        	std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;*/
+						dis.pop();
+					}
+					else if (dis_variation < -0.05)
+					{
+						viewer->addSphere(scroll, 0.5, 1.0, 0.0, 0.0, "scroll");
+						std::cout << "---------SCROLL DOWN" << std::endl;
+						std::cout << "[CLEAR]: dis queue" << std::endl;
+						/*
+                                        	while(!dis.empty())
+                                        	{
+                                                	dis.pop();
+                                        	}
+						dis.push(temp);
+                                        	std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;*/
+						dis.pop();
+					}
+					else
+					{
+						viewer->addSphere(scroll, 0.5, 0.0, 1.0, 0.0, "scroll");
+					}
 				
 				}else
 				{
