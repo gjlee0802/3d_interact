@@ -22,10 +22,10 @@ typedef pcl::PointXYZ PointT;
 using namespace std;
 
 
-class HandViewer
+class GestureHandler
 {
 	public:
-		HandViewer () : viewer (new pcl::visualization::PCLVisualizer ("3D Viewer")) {}
+		GestureHandler () : viewer (new pcl::visualization::PCLVisualizer ("3D Viewer")) {}
 		int rm_cnt=0;
 		
 		int button_pressed=2;	// This should be changed simultaneously by arduino's informations
@@ -191,27 +191,23 @@ class HandViewer
 				
 				// Get_max_and_min_coordinates
 				// Get Z Minimum Point
-				int current_min_index = 0;
-                                pcl::PointXYZ z_min_Pt;
-				pcl::PointXYZ minPt, maxPt;
+				pcl::PointXYZ z_minPt, maxPt;	
+					//z_minPt는 z값이 가장 작은 점의 xyz좌표를 담는 구조체 
+					// maxPt는 가장 큰 x, 가장 큰 y, 가장 큰 z를 각각 담는 구조체
 
-                                pcl::getMinMax3D (*cloud_filtered, minPt, maxPt);
-                                std::cout << "Min z: " << minPt.z << std::endl;
+                                pcl::getMinMax3D (*cloud_filtered, z_minPt, maxPt);
+                                std::cout << "Min z: " << z_minPt.z << std::endl;
 
 				for(size_t i=0; i < cloud_filtered->points.size(); i++)
 				{
-					if(cloud_filtered->points[i].z == minPt.z)
+					if(cloud_filtered->points[i].z == z_minPt.z)
 					{
-						minPt.x = cloud_filtered->points[i].x;
-						minPt.y = cloud_filtered->points[i].y;
+						z_minPt.x = cloud_filtered->points[i].x;
+						z_minPt.y = cloud_filtered->points[i].y;
 						break;
 					}
 				}
-				std::cout << "minPt: ("<< minPt.x <<", "<< minPt.y <<")"<<std::endl;
-
-				std::stringstream text;
-				text << "("<<minPt.x<<", "<<minPt.y<<")";
-				//viewer -> addText(text.str(), 10, 10, "text_minPt");
+				std::cout << "z_minPt: ("<< z_minPt.x <<", "<< z_minPt.y <<")"<<std::endl;
 				
 				// Handling Touch Box
                                 if (cloud_touch->size() != 0)
@@ -219,7 +215,7 @@ class HandViewer
 					
 					pcl::PointXYZ touchPt;
 
-                                	current_min_index = 0;
+                                	int current_min_index = 0;
                                 	for(size_t i=0; i < cloud_touch->points.size(); i++)
                                 	{
                                         	if(cloud_touch->points[i].z <= cloud_touch->points[current_min_index].z)
@@ -282,30 +278,26 @@ class HandViewer
 					viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
 					// K-means clustering END
 				
-					// Get distance between centr1 and centr2
-					dis.push(xy_distance(centr1, centr2));
-					std::cout << "xy_dis: " << dis.back() << std::endl;
+
+					// QUEUE가 필요하지 않을 수도 있음. 후에 수정가능.
+					// Get distance between centr1 and centr2 and then PUSH it to the queue
+					dis.push(xy_distance(centr1, centr2));	//큐에는 거리의 변화량이 아니라 거리가 입력됨.
 					
-					if (dis.size()>3)	// 수정할 부분.. 거리의 변화에 따라 바꿔야 할 듯 
-					// (둘 사이의 거리가 거의 변화하지 않을 경우를 생각
-					// -> 만약 큐에 일정 개수 이상의 데이터가 쌓일 경우 앞부분부터 pop을 한다.)
-					// (거리가 일정 거리 이상 변화했을 경우를 생각
-					// -> 마우스를 컨트롤하고 while문을 통해 queue를 비운다.)
+					// Make queue's size 3
+					if (dis.size()>3)
 					{
 						dis.pop();
 					}
+
+					std::cout <<"dis queue BACK: " << dis.back() << std::endl;
 					std::cout <<"dis queue FRONT: " << dis.front() << std::endl;
 					
-					pcl::PointXYZ scroll;
-
-					scroll.x = 0.0; scroll.y = 0.0; scroll.z = 5.0;
-					
+					// Calculate xy_distance variation
 					float dis_variation = dis.back() - dis.front();
-					
-					float temp = dis.back();
 
 					std::cout << "dis_variation: " << dis_variation << std::endl;
 					
+					// for printing dis_variation
 					char text[256];
 					sprintf(text, "%f", dis_variation);
 
@@ -313,14 +305,6 @@ class HandViewer
 					{
 
 						fork_mouse_event(0.0, 0.0, (char *)"scroll_up");
-						/*
-						std::cout << "[CLEAR]: dis queue" << std::endl;
-                                        	while(!dis.empty())
-                                        	{
-                                                	dis.pop();
-                                        	}
-						dis.push(temp);
-                                        	std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;*/
 						dis.pop();
 						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");
 					}
@@ -328,14 +312,6 @@ class HandViewer
 					{
 
 						fork_mouse_event(0.0, 0.0, (char *)"scroll_down");
-						/*
-						std::cout << "[CLEAR]: dis queue" << std::endl;
-                                        	while(!dis.empty())
-                                        	{
-                                                	dis.pop();
-                                        	}
-						dis.push(temp);
-                                        	std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;*/
 						dis.pop();
 						viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
 					}
@@ -356,8 +332,6 @@ class HandViewer
 				}
 
 				// Update viewer
-				
-				//viewer->addSphere(minPt, 0.1, 0.0, 0.0, 1.0, "minPt_z");
 
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
@@ -373,9 +347,9 @@ class HandViewer
 
 int main (int argc, char** argv)
 {
-	HandViewer v;
-	v.viewer_set();
-	v.run ();
+	GestureHandler gh;
+	gh.viewer_set();
+	gh.run ();
 	return 0;
 }
 
