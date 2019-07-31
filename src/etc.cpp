@@ -47,12 +47,18 @@ int fork_mouse_event(float x, float y, char * command)
 
 		if(!strcmp(command, "scroll_up"))
 		{
-
+			std::cout << "[xdotool SCROLL_UP]" << std::endl;
+			execlp("xdotool", "xdotool", "click", "4", NULL);
+			perror("execlp error!");
+			exit(0);
 		}
 
 		if(!strcmp(command, "scroll_down"))
 		{
-
+			std::cout << "[xdotool SCROLL_DOWN]" << std::endl;
+			execlp("xdotool", "xdotool", "click", "5", NULL);
+			perror("execlp error!");
+			exit(0);
 		}
 		
 	}

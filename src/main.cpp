@@ -314,8 +314,10 @@ class HandViewer
 					{
 						viewer->addSphere(scroll, 0.5, 0.0, 0.0, 1.0, "scroll");
 						std::cout << "+++++++++SCROLL UP" << std::endl;
-						std::cout << "[CLEAR]: dis queue" << std::endl;
+
+						fork_mouse_event(0.0, 0.0, (char *)"scroll_up");
 						/*
+						std::cout << "[CLEAR]: dis queue" << std::endl;
                                         	while(!dis.empty())
                                         	{
                                                 	dis.pop();
@@ -328,8 +330,10 @@ class HandViewer
 					{
 						viewer->addSphere(scroll, 0.5, 1.0, 0.0, 0.0, "scroll");
 						std::cout << "---------SCROLL DOWN" << std::endl;
-						std::cout << "[CLEAR]: dis queue" << std::endl;
+
+						fork_mouse_event(0.0, 0.0, (char *)"scroll_down");
 						/*
+						std::cout << "[CLEAR]: dis queue" << std::endl;
                                         	while(!dis.empty())
                                         	{
                                                 	dis.pop();

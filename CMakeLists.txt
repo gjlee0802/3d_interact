@@ -7,8 +7,8 @@ find_package(PCL 1.9 REQUIRED)
 find_package(Boost COMPONENTS thread system REQUIRED)
 find_package(Threads QUIET)
 
-find_package(CUDA)
-include(FindCUDA)
+#find_package(CUDA)
+#include(FindCUDA)
 
 
 include_directories(${PCL_INCLUDE_DIRS})
