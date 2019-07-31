@@ -308,12 +308,9 @@ class HandViewer
 					
 					char text[256];
 					sprintf(text, "%f", dis_variation);
-					viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "var");
 
-					if (dis_variation  > 0.05)	//0.01/0.05?? 상황에 따라 조절
+					if (dis_variation  > 0.08)	//0.05?? 상황에 따라 조절
 					{
-						viewer->addSphere(scroll, 0.5, 0.0, 0.0, 1.0, "scroll");
-						std::cout << "+++++++++SCROLL UP" << std::endl;
 
 						fork_mouse_event(0.0, 0.0, (char *)"scroll_up");
 						/*
@@ -325,11 +322,10 @@ class HandViewer
 						dis.push(temp);
                                         	std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;*/
 						dis.pop();
+						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");
 					}
-					else if (dis_variation < -0.05)
+					else if (dis_variation < -0.08)
 					{
-						viewer->addSphere(scroll, 0.5, 1.0, 0.0, 0.0, "scroll");
-						std::cout << "---------SCROLL DOWN" << std::endl;
 
 						fork_mouse_event(0.0, 0.0, (char *)"scroll_down");
 						/*
@@ -341,10 +337,11 @@ class HandViewer
 						dis.push(temp);
                                         	std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;*/
 						dis.pop();
+						viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
 					}
 					else
 					{
-						viewer->addSphere(scroll, 0.5, 0.0, 1.0, 0.0, "scroll");
+						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 1.0, 0.0, "dis_variation");
 					}
 				
 				}else
