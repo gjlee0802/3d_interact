@@ -3,9 +3,9 @@
 //------------------------------------------------------------------------
 //모니터 해상도에 따라 변경
 #define Screen_width 1920
-#define Screen_x_half 960
+#define Screen_x_half 960	// Screen_width/2 
 #define Screen_height 1080
-#define Screen_y_half 540
+#define Screen_y_half 540	// Screen_height/2
 
 //아래의 상수는 직접 측정한 MIN, MAX 값을 바탕으로 직접 계산하여 정한다.
 #define Cloud_x_center -0.272605
@@ -14,8 +14,8 @@
 #define Cloud_height 6.62856
 //------------------------------------------------------------------------
 
-pcl::PointXYZ xy_past;
-pcl::PointXYZ xy_now;
+pcl::PointXYZ mouse_past;
+pcl::PointXYZ mouse_now;
 
 float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 {
@@ -31,13 +31,27 @@ int fork_mouse_event(float x, float y, char * command)
 	char x_buff[256];
 	char y_buff[256];
 
-	// Change to moniter's coordinates (This should be changed later! NOT FINISHED)
+	float mouse_dis;
+
+	// Change to moniter's coordinates (This should be changed later! NOT FINISHED)	// 화면 해상도에 따른 마우스 좌표 설정 (비율 변환)
 	x = Screen_x_half + (x-Cloud_x_center)*(Screen_width/Cloud_width);
 	y = Screen_y_half + (y*(-1)-Cloud_y_center)*(Screen_height/Cloud_height);
 
 	sprintf(x_buff, "%f", x);
 	sprintf(y_buff, "%f", y);
 
+	mouse_dis = xy_distance(mouse_past, mouse_now);
+
+	mouse_past = mouse_now;
+
+	std::cout << "mouse_dis: "<< mouse_dis << std::endl;
+
+	if(mouse_dis > 0.1)
+	{
+		return 1;
+	}
+
+	int status;
 	pid_t pid;
 
 	pid = fork();
@@ -51,7 +65,7 @@ int fork_mouse_event(float x, float y, char * command)
 			std::cout << "[xdotool MOVE]: "<<"("<<x<<", "<<y<<")"<<std::endl;
 			execlp("xdotool", "xdotool", "mousemove", x_buff, y_buff, NULL);
 			perror("execlp error!");
-			exit(0);
+			exit(1);
 		}
 
 		if(!strcmp(command, "click"))	// strcmp return 0(false) if they are same things..
@@ -59,7 +73,7 @@ int fork_mouse_event(float x, float y, char * command)
 			std::cout << "[xdotool CLICK]: "<<"("<<x<<", "<<y<<")"<< std::endl;
 			execlp("xdotool", "xdotool", "click", "1", NULL);
 			perror("execlp error!");
-			exit(0);
+			exit(1);
 		}
 
 		if(!strcmp(command, "scroll_up"))
@@ -67,7 +81,7 @@ int fork_mouse_event(float x, float y, char * command)
 			std::cout << "[xdotool SCROLL_UP]" << std::endl;
 			execlp("xdotool", "xdotool", "click", "4", NULL);
 			perror("execlp error!");
-			exit(0);
+			exit(1);
 		}
 
 		if(!strcmp(command, "scroll_down"))
@@ -75,7 +89,7 @@ int fork_mouse_event(float x, float y, char * command)
 			std::cout << "[xdotool SCROLL_DOWN]" << std::endl;
 			execlp("xdotool", "xdotool", "click", "5", NULL);
 			perror("execlp error!");
-			exit(0);
+			exit(1);
 		}
 		
 		if(!strcmp(command, "mouse_down"))
@@ -83,7 +97,7 @@ int fork_mouse_event(float x, float y, char * command)
 			std::cout << "[xdotool MOUSE_DOWN]" << std::endl;
 			execlp("xdotool", "xdotool", "mousedown", "1", NULL);
 			perror("execlp error!");
-			exit(0);
+			exit(1);
 		}
 
 		if(!strcmp(command, "mouse_up"))
@@ -91,13 +105,26 @@ int fork_mouse_event(float x, float y, char * command)
 			std::cout << "[xdotool MOUSE_UP]" << std::endl;
 			execlp("xdotool", "xdotool", "mouseup", "1", NULL);
 			perror("execlp error!");
-			exit(0);
+			exit(1);
 		}
 
 	}
 	else if(pid > 0)	// Parent Process
 	{
-		return 1;
+		//waitpid(pid, NULL, 0);
+		std::cout << "Parent: wait "<< pid << std::endl;
+
+		waitpid(pid, &status, 0);
+		if(WIFEXITED(status))
+		{
+			std::cout << "Child process killed" << std::endl;
+			return 1;
+		}
+
+	}
+	else if(pid < -1)
+	{
+		return -1;
 	}
 
 }

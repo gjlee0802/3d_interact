@@ -36,9 +36,9 @@ class GestureHandler
 	public:
 		GestureHandler () : viewer (new pcl::visualization::PCLVisualizer ("3D Viewer")) {}
 		
-		int pressed_finger[2][2]={{0,0},{0,0}};//{{0,1}, {0,1}};	// This should be changed simultaneously by arduino's informations
+		int pressed_finger[2][2]={{0,0},{0,0}};	// This should be changed simultaneously by arduino's informations
 		
-		char *mode=(char *)"pick_hold";//=(char *)"nothing";
+		char *mode=(char *)"nothing";
 
 		int exe_once=0;
 
@@ -165,7 +165,7 @@ class GestureHandler
 
 	}
 
-	void detect_mode()	//모드를 탐지: 센서의 정보에 따라 char *mode를 수정한다.
+	void detect_mode()	//모드를 탐지: 센서의 정보에 따라 char *mode를 수정한다.	// 아두이노로부터 센서 정보를 받온 이후에 호출
 	{
 		// 아무것도 눌리지 않았을 때
 		if(pressed_finger[0][0]==false

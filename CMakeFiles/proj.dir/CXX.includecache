@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+/home/user/workspace/proj/src/etc.cpp
+proj/etc.hpp
+/home/user/workspace/proj/src/proj/etc.hpp
+
 /home/user/workspace/proj/src/main.cpp
 iostream
 -
@@ -3013,8 +3017,12 @@ pcl/point_types.h
 -
 sys/types.h
 -
+sys/wait.h
+-
 unistd.h
 -
 stdlib.h
+-
+signal.h
 -
 
