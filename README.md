@@ -5,11 +5,20 @@ Smart System Competition Proj
 
 8월 목표: 제스쳐 인식 완성, 프레임 완성
 
-./src 소스 파일
-./include 헤더 파일
+<디렉토리 정보>
+./src 소스 파일 저장 공간
+./include 헤더 파일 저장 공간
+./test_field 테스트 공간
+./test_results_log 테스트 결과 저장 공간(mp4, txt)
+./backups 프로젝트 백업 저장 공간
 
-사전 설치
 
+<사전 설치>
 Point Cloud Library
-
 Xdotool
+
+<주의 사항>
+[1]. 수동으로 변경해야 할 필요가 있는 부분은
+     점선 ( //--------- )으로 구분함.
+
+[2]. 
