@@ -1,6 +1,3 @@
-#ifndef __MAIN_HEADER__
-#define __MAIN_HEADER__
-
 #include <iostream>
 
 #include <queue>
@@ -10,16 +7,20 @@
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl/ml/kmeans.h>	//	for K-means Cluster Extraction
+#include <pcl/ml/kmeans.h>			// for K-means Cluster Extraction
 
 #include <boost/thread.hpp>
 
 #include "proj/etc.hpp"
 
-#endif
+//----------------------------------------------------------
+/*
+Estimate MIN MAX 결과에 따라 변경해줘야 함!!
+etc.cpp의 define 또한 변경이 필요함.
+*/
 
-//----------------------------------------------------------Estimate MIN MAX 한 결과에 따라 변경해줘야 함!!
-// 또한 TouchBox의 위치를 조정할 때마다 MIN MAX의 값을 직접 측정하고 변경해줘야 함.
+//#define ESTIMATE_MIN_MAX			// 만약 측정하고 싶다면 주석을 해제하고 출력을 확인
+
 #define MAX_X 4.00296	//<---MAX.x
 #define MAX_Y 3.37167	//<---MAX.y
 #define MIN_X -4.54817	//<---MIN.x
@@ -33,17 +34,25 @@ using namespace std;
 
 class GestureHandler
 {
-	public:
-		GestureHandler () : viewer (new pcl::visualization::PCLVisualizer ("3D Viewer")) {}
-		
-		int pressed_finger[2][2]={{0,0},{0,0}};	// This should be changed simultaneously by arduino's informations
-		
-		char *mode=(char *)"pick_hold";
+public:
 
-		int exe_once=0;
+	int pressed_finger[2][2]={{0,0},{0,0}}; // This should be changed simultaneously by arduino's informations
+        int (*pressed_finger_Ptr)[2];
 
-		queue<float> dis;	// Save distances between centr1 and centr2 in this vector container
-		
+        char mode[1024];
+
+        int exe_once=0;
+
+        queue<float> dis;       // Save distances between centr1 and centr2 in this vector container
+
+	//Constructor(생성자)
+	GestureHandler () : 
+		viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"))
+	{
+		pressed_finger_Ptr = pressed_finger;
+		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
+	}
+
 	void viewer_set()
 	{
 		viewer->setFullScreen(false);
@@ -165,32 +174,6 @@ class GestureHandler
 
 	}
 
-	void detect_mode()	//모드를 탐지: 센서의 정보에 따라 char *mode를 수정한다.	// 아두이노로부터 센서 정보를 받온 이후에 호출
-	{
-		// 아무것도 눌리지 않았을 때
-		if(pressed_finger[0][0]==false
-		&& pressed_finger[0][1]==false
-		&& pressed_finger[1][0]==false
-		&& pressed_finger[1][1]==false)
-			mode = (char *)"nothing";
-		// 오직 하나의 검지 손가락만 눌렸을 때?? 어떤 상황에서 pick_hold 모드로 들어갈지는 향후에 변경
-		if((pressed_finger[0][0]==true
-		&& pressed_finger[0][1]==false
-		&& pressed_finger[1][0]==false
-		&& pressed_finger[1][1]==false)
-		|| (pressed_finger[0][0]==false
-                && pressed_finger[0][1]==false
-                && pressed_finger[1][0]==true
-                && pressed_finger[1][1]==false))
-			mode = (char *)"pick_hold";
-		// 두 손의 중지 손가락이 모두 눌렸을 때
-		if(pressed_finger[0][0]==false
-                && pressed_finger[0][1]==true
-                && pressed_finger[1][0]==false
-                && pressed_finger[1][1]==true)
-			mode = (char *)"zoom_scroll";
-		
-	}
 
 	void run ()
 	{
@@ -236,8 +219,8 @@ class GestureHandler
 			{
 				std::cout << "-----------------------------------------------------------" << std::endl;
 
-				// Print cloud->size()
-				std::cout << "cloud size : " << cloud->size() << std::endl;
+				detect_mode(mode, pressed_finger);
+				std::cout << "[detect_mode]: "<< mode << std::endl;
 
 				// PassThrough Filtering START
 				pass.setInputCloud(cloud);
@@ -259,9 +242,11 @@ class GestureHandler
 				
 				// Get_max_and_min_coordinates
 				// Get Z Minimum Point
+				/*
+                                z_minPt는 z값이 가장 작은 점의 xyz좌표를 담는 구조체,
+                                maxPt는 가장 큰 x, 가장 큰 y, 가장 큰 z를 각각 담는 구조체이다.
+                                */
 				pcl::PointXYZ z_minPt, maxPt;	
-					// z_minPt는 z값이 가장 작은 점의 xyz좌표를 담는 구조체 
-					// maxPt는 가장 큰 x, 가장 큰 y, 가장 큰 z를 각각 담는 구조체
 
                                 pcl::getMinMax3D (*cloud_filtered, z_minPt, maxPt);
 
@@ -278,10 +263,12 @@ class GestureHandler
 				}
 				std::cout << "z_minPt: ("<< z_minPt.x <<", "<< z_minPt.y <<")"<<std::endl;
 
+			#ifdef ESTIMATE_MIN_MAX
 				// ---------------------------------------------------------Estimate MIN MAX START
-                                        // 화면 비율과 좌표를 맞추기 위해 cloud_touch의 MIN, MAX를 측정한다.
-                                        // PointCloud 상의 최대 x, y 좌표를 이용하여 화면의 x, y 좌표와 매칭시키는 데 사용.
-
+                                        /* 
+					화면 비율과 좌표를 맞추기 위해 cloud_touch의 MIN, MAX를 측정한다.
+                                        PointCloud 상의 최대 x, y 좌표를 측정하여 TouchBox의 해상도와  화면의 해상도를 매칭시키는 데 사용한다.
+					*/
 				if(cloud_touch->size() != 0)
 				{
 					pcl::PointXYZ minPt;
@@ -302,7 +289,7 @@ class GestureHandler
 					draw_max_min_line(touch_box_max_z);
 				}
 				// ----------------------------------------------------------Estimate MIN MAX END
-				
+			#endif
 
 				if (cloud_filtered->size() == 0 && exe_once == true)	// need for pick_hold mode	// 향후 조건 변경 if(!strcmp(mode, "nothing") && exe_once == true)
 				{
