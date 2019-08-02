@@ -36,7 +36,7 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
  * fork_mouse_event(): 
  * fork()를 통해 자식 프로세스를 낳는다.
  * 자식 프로세스에서는 exec계열의 함수를 통해 xdotool을 실행한다.
- * 부모 프로세스에서는 pid_wait()를 통해 자식 프로세스가 종료될 때까지 기다린다.
+ * 부모 프로세스에서는 waitpid()를 통해 자식 프로세스가 종료될 때까지 기다린다.
  * fork()를 실패하면 -1을 반환한다.
  * command 인식에 실패하면 0을 반환한다.
  * 성공하면 1을 반환한다.

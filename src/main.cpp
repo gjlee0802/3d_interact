@@ -221,7 +221,6 @@ public:
 		float cloud_filtered_max_z = 13.0;
 		//-------------------------------------
 
-		//pcl::PointXYZ tempPt;	
 #ifdef ESTIMATE_MIN_MAX
 		pcl::PointXYZ MIN; pcl::PointXYZ MAX;	// Use for estimating MAX values or MIN values of the coordinates.
 #endif
