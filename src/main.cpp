@@ -38,7 +38,7 @@ class GestureHandler
 		
 		int pressed_finger[2][2]={{0,0},{0,0}};	// This should be changed simultaneously by arduino's informations
 		
-		char *mode=(char *)"nothing";
+		char *mode=(char *)"pick_hold";
 
 		int exe_once=0;
 

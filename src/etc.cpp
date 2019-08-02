@@ -40,17 +40,26 @@ int fork_mouse_event(float x, float y, char * command)
 	sprintf(x_buff, "%f", x);
 	sprintf(y_buff, "%f", y);
 
+	// mouse_dis filtering START: 마우스 흔들림을 줄이기 위함
+	mouse_now.x = x; mouse_now.y = y;
+
+	std::cout << "mouse_past: " << mouse_past.x << ", "<< mouse_past.y << std::endl;
+	std::cout << "mouse_now: " << mouse_now.x << ", "<< mouse_now.y <<std::endl;
+
 	mouse_dis = xy_distance(mouse_past, mouse_now);
-
-	mouse_past = mouse_now;
-
 	std::cout << "mouse_dis: "<< mouse_dis << std::endl;
 
-	if(mouse_dis > 0.1)
+	if(mouse_dis < 25.0 && mouse_dis > 7.0)
 	{
 		return 1;
 	}
-
+	else
+	{
+		std::cout << "TEST" << std::endl;
+	}
+	mouse_past = mouse_now;
+	// mouse_dis filtering END
+	
 	int status;
 	pid_t pid;
 
@@ -109,7 +118,7 @@ int fork_mouse_event(float x, float y, char * command)
 		}
 
 	}
-	else if(pid > 0)	// Parent Process
+	else if(pid > 0)	// Parent Process get child process's PID
 	{
 		//waitpid(pid, NULL, 0);
 		std::cout << "Parent: wait "<< pid << std::endl;
