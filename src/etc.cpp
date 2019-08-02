@@ -17,6 +17,12 @@
 pcl::PointXYZ mouse_past;
 pcl::PointXYZ mouse_now;
 
+/* 
+ * xy_distance():
+ * pcl::PointXYZ (x, y, z가 담겨있는 구조체) 파라미터로 받는다.
+ * z를 무시하고 x, y 좌표만을 고려하여 2차원 xy평면 상에서의 두 점 사이의 거리를 계산한다.
+ * 계산한 거리를 반환한다.
+ */
 float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 {
         float distance;
@@ -26,6 +32,15 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
         return distance;
 }
 
+/*
+ * fork_mouse_event(): 
+ * fork()를 통해 자식 프로세스를 낳는다.
+ * 자식 프로세스에서는 exec계열의 함수를 통해 xdotool을 실행한다.
+ * 부모 프로세스에서는 pid_wait()를 통해 자식 프로세스가 종료될 때까지 기다린다.
+ * fork()를 실패하면 -1을 반환한다.
+ * command 인식에 실패하면 0을 반환한다.
+ * 성공하면 1을 반환한다.
+ */
 int fork_mouse_event(float x, float y, char * command)
 {
 	char x_buff[256];
@@ -142,10 +157,14 @@ int fork_mouse_event(float x, float y, char * command)
 	}
 
 }
-/* detect_mode(): 센서의 정보에 따라 char *mode를 수정한다.
+
+/* 
+ * detect_mode(): 
+ * 센서의 정보에 따라 char *mode를 수정한다.
  * 아두이노로부터 센서 정보를 받온 이후에 호출해야 힌디.
  * 아두이노로부터 받은 센서 정보를 2X2행렬의 파라미터로 받는다.
- * 성공시 1, 실패시 0을 반환한다.*/
+ * 성공시 1, 실패시 0을 반환한다.
+ */
 int detect_mode(char *mode, int (*pressed_finger)[2]) 
 {
         // 아무것도 눌리지 않았을 때

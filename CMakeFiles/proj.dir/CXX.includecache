@@ -6,6 +6,10 @@
 
 #IncludeRegexTransform: 
 
+/home/user/workspace/proj/src/etc.cpp
+proj/etc.hpp
+/home/user/workspace/proj/src/proj/etc.hpp
+
 /home/user/workspace/proj/src/main.cpp
 iostream
 -
