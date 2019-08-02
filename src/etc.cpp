@@ -49,7 +49,7 @@ int fork_mouse_event(float x, float y, char * command)
 	mouse_dis = xy_distance(mouse_past, mouse_now);
 	std::cout << "mouse_dis: "<< mouse_dis << std::endl;
 
-	if(mouse_dis < 25.0 && mouse_dis > 7.0)
+	if(mouse_dis < 25.0 && mouse_dis > 4.0)
 	{
 		return 1;
 	}
