@@ -1,5 +1,5 @@
 /***********************************************************************\
- *			Copyright (C) Gyeongju Lee, 2019	Ver0.1	*
+ *			Copyright (C) Gyeongju Lee, 2019	Ver0.2	*
  * This program was created by a first-year student in the Department 	*
  * of Smart System Software in preparation for the competition.		*
  * This program was created to implement a technology that combines 	*
