@@ -24,9 +24,14 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
  * Second/Third Parameter: Point Cloud Data 기준의 (x,y)좌표를 받는다.
  * Fourth Parameter: 실행할 명령을 입력받는다.
  *
- * fork()를 통해 자식 프로세스를 낳는다.
- * 자식 프로세스에서는 exec계열의 함수를 통해 xdotool을 실행한다.
- * 부모 프로세스에서는 waitpid()를 통해 자식 프로세스가 종료될 때까지 기다린다.
+ * double fork를 통해 좀비 프로세스가 발생하지 않도록 한다.
+ * 
+ * 부모 프로세스A는 fork()를 통해 자식 프로세스B를 낳고 자식 프로세스가 종료하길 기다린다.
+ * 자식 프로세스B에서는 fork()를 통해 자식 프로세스C를 낳고 exit()를 실행하여 바로 종료한다.
+ * C의 부모 프로세스였던 프로세스B가 종료되었으므로 init소속의 프로세스가 되어 exec함수가 종료된 후에 정상종료한다.
+ * (exec계열의 함수를 통해 마우스 제어 프로그램인 xdotool을 실행한다.)
+ * 
+ * -> double fork를 안하고 단일 fork를 한다면 scroll과 마우스 제어에서 시간이 상당히 소요되어 프레임 속도가 매우 저하됨.
  *
  * fork()를 실패하면 -1을 반환한다.
  * command 인식에 실패하면 0을 반환한다.
@@ -72,78 +77,91 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 	// mouse_dis filtering END
 	
 	int status;
-	pid_t pid;
+	pid_t pid1;	// Child Process B
+	pid_t pid2;
 
-	pid = fork();
+	pid1 = fork();
 
-	if(pid == 0)	// Child Process
+	if(pid1 == 0)	// Child Process B
 	{
-		std::cout << "[CALL MOUSE EVENT]: "<< command << std::endl;
+		pid2 = fork();
 
-		if(!strcmp(command, "move"))
+		if(pid2 == 0)	// Child Process C
 		{
-			std::cout << "[xdotool MOVE]: "<<"("<<x<<", "<<y<<")"<<std::endl;
-			execlp("xdotool", "xdotool", "mousemove", x_buff, y_buff, NULL);
-			perror("execlp error!");
-			exit(1);
-		}
+			
+			std::cout << "[CALL MOUSE EVENT]: "<< command << std::endl;
 
-		else if(!strcmp(command, "click"))	// strcmp return 0(false) if they are same things..
-		{
-			std::cout << "[xdotool CLICK]: "<<"("<<x<<", "<<y<<")"<< std::endl;
-			execlp("xdotool", "xdotool", "click", "1", NULL);
-			perror("execlp error!");
-			exit(1);
-		}
+			if(!strcmp(command, "move"))
+			{
+				std::cout << "[xdotool MOVE]: "<<"("<<x<<", "<<y<<")"<<std::endl;
+				execlp("xdotool", "xdotool", "mousemove", x_buff, y_buff, NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+	
+			else if(!strcmp(command, "click"))	// strcmp return 0(false) if they are same things..
+			{
+				std::cout << "[xdotool CLICK]: "<<"("<<x<<", "<<y<<")"<< std::endl;
+				execlp("xdotool", "xdotool", "click", "1", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
 
-		else if(!strcmp(command, "scroll_up"))
-		{
-			std::cout << "[xdotool SCROLL_UP]" << std::endl;
-			execlp("xdotool", "xdotool", "click", "4", NULL);
-			perror("execlp error!");
-			exit(1);
-		}
+			else if(!strcmp(command, "scroll_up"))
+			{
+				std::cout << "[xdotool SCROLL_UP]" << std::endl;
+				execlp("xdotool", "xdotool", "click", "4", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
 
-		else if(!strcmp(command, "scroll_down"))
-		{
-			std::cout << "[xdotool SCROLL_DOWN]" << std::endl;
-			execlp("xdotool", "xdotool", "click", "5", NULL);
-			perror("execlp error!");
-			exit(1);
-		}
+			else if(!strcmp(command, "scroll_down"))
+			{
+				std::cout << "[xdotool SCROLL_DOWN]" << std::endl;
+				execlp("xdotool", "xdotool", "click", "5", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
 		
-		else if(!strcmp(command, "mouse_down"))
-		{
-			std::cout << "[xdotool MOUSE_DOWN]" << std::endl;
-			execlp("xdotool", "xdotool", "mousedown", "1", NULL);
-			perror("execlp error!");
-			exit(1);
-		}
+			else if(!strcmp(command, "mouse_down"))
+			{
+				std::cout << "[xdotool MOUSE_DOWN]" << std::endl;
+					execlp("xdotool", "xdotool", "mousedown", "1", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
 
-		else if(!strcmp(command, "mouse_up"))
+			else if(!strcmp(command, "mouse_up"))
+			{
+				std::cout << "[xdotool MOUSE_UP]" << std::endl;
+				execlp("xdotool", "xdotool", "mouseup", "1", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+			else
+			{
+				std::cout << "[MOUSE EVENT]: UNKNOWN command!: "<< command << std::endl;
+				exit(0);
+			}
+
+		}
+		else if(pid2 > 0)	// Child Process B
 		{
-			std::cout << "[xdotool MOUSE_UP]" << std::endl;
-			execlp("xdotool", "xdotool", "mouseup", "1", NULL);
-			perror("execlp error!");
-			exit(1);
+			exit(0);
 		}
 		else
 		{
-			std::cout << "[MOUSE EVENT]: UNKNOWN command!: "<< command << std::endl;
-			exit(0);
+			/*error*/
+			std::cout << "[ERROR]: fork" << std::endl;
+			return -1;
 		}
 
 	}
-	else if(pid > 0)	// Parent Process get child process's PID
+	else if(pid1 > 0)	// Parent Process get child process's PID
 	{
 
-		std::cout << "Parent: wait "<< pid << std::endl;
-		
-		if(!strcmp(command, "scroll_up")||!strcmp(command, "scroll_down"))
-		{
-			return 1;	// Child Process를 종료하지 않는다. Zombie Process들이 남는다.
-		}
-		waitpid(pid, &status, 0);
+		std::cout << "Parent: wait Child Process"<< "("<<pid1<<")" << std::endl;
+		waitpid(pid1, &status, 0);
 		if(WIFEXITED(status))
 		{
 			std::cout << "Child process killed" << std::endl;
@@ -151,8 +169,9 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 		}
 
 	}
-	else if(pid < -1)
+	else if(pid1 < -1)
 	{
+		std::cout << "[ERROR]: fork" << std::endl;
 		return -1;
 	}
 
