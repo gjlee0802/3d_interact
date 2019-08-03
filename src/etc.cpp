@@ -1,9 +1,5 @@
 #include "proj/etc.hpp"
 
-pcl::PointXYZ mouse_past;
-pcl::PointXYZ mouse_now;
-
-
 /* 
  * xy_distance():
  * 
@@ -36,6 +32,10 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
  * command 인식에 실패하면 0을 반환한다.
  * 성공하면 1을 반환한다.
  */
+
+pcl::PointXYZ mouse_past;
+pcl::PointXYZ mouse_now;
+
 int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 {
 	char x_buff[256];
@@ -138,7 +138,11 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 	{
 
 		std::cout << "Parent: wait "<< pid << std::endl;
-
+		
+		if(!strcmp(command, "scroll_up")||!strcmp(command, "scroll_down"))
+		{
+			return 1;	// Child Process를 종료하지 않는다. Zombie Process들이 남는다.
+		}
 		waitpid(pid, &status, 0);
 		if(WIFEXITED(status))
 		{

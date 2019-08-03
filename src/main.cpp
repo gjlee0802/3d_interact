@@ -40,7 +40,10 @@ using namespace std;
 class GestureHandler
 {
 private:
-	
+	/*
+	 * Screen_data: 터치영역과 출력화면의 정보를 담고 있는 구조체
+	 * 파라미터 입력용 포인터
+	 */
 	struct Screen_data screen_data;
 	struct Screen_data *sd = &screen_data;
 
@@ -50,7 +53,7 @@ private:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2] = {{0,0}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
+	int pressed_finger[2][2] = {{0,1}, {0,1}}; 	// This should be changed simultaneously by arduino's informations.
         int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*
@@ -70,11 +73,11 @@ private:
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
 public:	
-
 	/* Constructor(생성자) */
 	GestureHandler () : 
 		viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"))
 	{
+		this->viewer_set();
 		pressed_finger_Ptr = pressed_finger;
 		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
 	}
@@ -499,8 +502,8 @@ public:
 int main (int argc, char** argv)
 {
 	GestureHandler gh;
-	gh.viewer_set();
 	gh.run ();
+
 	return 0;
 }
 
