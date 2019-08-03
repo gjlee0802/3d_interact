@@ -1,5 +1,10 @@
 #TouchBox의 영역을 알기 위해 MIN MAX의 x.y 측정값을 기록한다.
 
+
+4 : 3 		-> 1.33333333... : 1
+
+터치 박스 비율	-> 1.2900433 : 1
+
 [Estimate MIN MAX 2019.08.02] : (touch_box_max_z: 8.2 경우)
 
 [1]
@@ -11,4 +16,28 @@ MIN: (-4.54817, -3.25689)
 [3] (최종 결과)
 MAX: (4.00296, 3.37167)
 MIN: (-4.54817, -3.25689)
+
+// TOUCH_Z_MAX가 8.2로 정의된 경우
+#define Cloud_x_center  -0.272605       // (MAX_X+MIN_X)/2
+#define Cloud_y_center  0.05739         // (MAX_Y+MIN_Y)/2
+#define Cloud_width     8.55113         // (MAX_X-MIN_X)
+#define Cloud_height    6.62856         // (MAX_Y-MIN_Y)
+
+//가로 세로 비율
+1.290043388 : 1
+
+[Estimate MIN MAX 2019.08.02] : (touch_box_max_z: 10.2 경우)
+
+[1]
+MAX: (5.05075, 4.19409)
+MIN: (-5.58617, -4.05131)
+[2]
+MAX: (5.05075, 4.19409)
+MIN: (-5.58617, -4.05131)
+
+// TOUCH_Z_MAX가 10.2로 정의된 경우
+#define Cloud_x_center  -0.26771       // (MAX_X+MIN_X)/2
+#define Cloud_y_center  0.07139         // (MAX_Y+MIN_Y)/2
+#define Cloud_width     10.63692         // (MAX_X-MIN_X)
+#define Cloud_height    8.2454         // (MAX_Y-MIN_Y)
 

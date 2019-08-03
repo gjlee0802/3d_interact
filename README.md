@@ -18,7 +18,7 @@ Point Cloud Library
 Xdotool
 
 <주의 사항>
-[1]. 수동으로 변경해야 할 필요가 있는 부분은
-     점선 ( //--------- )으로 구분함.
+[1]. 	터치 영역이 변형될 경우, ./include/etc.hpp의 Struct Screen_data 안에 있는 값들을 실측값으로 변경해야한다.
+	#define Estimate_MIN_MAX의 주석을 해제하여 활성화하고 측정하여 MIN MAX 실측값을 얻을 수 있다.
 
 [2]. 

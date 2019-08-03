@@ -20,34 +20,29 @@
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl/ml/kmeans.h>			// for K-means Cluster Extraction
+#include <pcl/ml/kmeans.h>				// for K-means Cluster Extraction
 
 #include <boost/thread.hpp>
 
 #include "proj/etc.hpp"
 
-//----------------------------------------------------------
-/*
-Estimate MIN MAX 결과에 따라 변경해줘야 함!!
-etc.cpp의 define 또한 변경이 필요함.
-*/
 
-//#define ESTIMATE_MIN_MAX			// 만약 측정하고 싶다면 주석을 해제하고 출력을 확인
 
-#define MAX_X 4.00296	//<---MAX.x
-#define MAX_Y 3.37167	//<---MAX.y
-#define MIN_X -4.54817	//<---MIN.x
-#define MIN_Y -3.25689	//<---MIN.y
+//-------------------<사용자 설정 값>-----------------------
+#define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
+//#define Estimate_MIN_MAX				// TOUCH_Z_MAX를 변경할 경우, 주석을 해제하여 변경할 영역에서의 MIN, MAX 측정.
 //----------------------------------------------------------
 
 
 typedef pcl::PointXYZ PointT;
 using namespace std;
 
-
 class GestureHandler
 {
-public:
+private:
+	
+	struct Screen_data screen_data;
+	struct Screen_data *sd = &screen_data;
 
 	/*
 	 *  pressed_finger[0][0]: 오른쪽 손 검지
@@ -55,8 +50,8 @@ public:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2]={{0,0},{0,0}}; 	// This should be changed simultaneously by arduino's informations.
-        int (*pressed_finger_Ptr)[2];			// pressed_finger 전달을 목적으로 하는 2차원 포인터 변수.
+	int pressed_finger[2][2] = {{0,0}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
+        int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*
 	 * mode "nothing": 터치를 했을 경우 마우스 이동만 한다.
@@ -73,6 +68,8 @@ public:
         int exe_once=0;
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
+
+public:	
 
 	/* Constructor(생성자) */
 	GestureHandler () : 
@@ -97,22 +94,22 @@ public:
 		pcl::PointXYZ a;
 		pcl::PointXYZ b;
 
-		a.x = MIN_X;
-		a.y = (MIN_Y+MAX_Y)/2;
+		a.x = sd->MIN_X;
+		a.y = (sd->MIN_Y+sd->MAX_Y)/2;
 		a.z = z_max;
 		
-		b.x = MAX_X;
-		b.y = (MIN_Y+MAX_Y)/2;
+		b.x = sd->MAX_X;
+		b.y = (sd->MIN_Y+sd->MAX_Y)/2;
 		b.z = z_max;
 		
 		viewer->addLine(a, b, 0, 0, 1.0, "Cloud_width");
 		
-		a.x = (MIN_X+MAX_X)/2;
-		a.y = MIN_Y;
+		a.x = (sd->MIN_X+sd->MAX_X)/2;
+		a.y = sd->MIN_Y;
 		a.z = z_max;
 		
-		b.x = (MIN_X+MAX_X)/2;
-		b.y = MAX_Y;
+		b.x = (sd->MIN_X+sd->MAX_X)/2;
+		b.y = sd->MAX_Y;
 		b.z = z_max;
 		
 		viewer->addLine(a, b, 0, 0, 1.0, "Cloud_height");
@@ -127,83 +124,83 @@ public:
 		pcl::PointXYZ a;
 		pcl::PointXYZ b;
 
-		a.x = MIN_X;
-		a.y = MAX_Y;
+		a.x = sd->MIN_X;
+		a.y = sd->MAX_Y;
 		a.z = z_max;
-		b.x = MAX_X;
-		b.y = MAX_Y;
+		b.x = sd->MAX_X;
+		b.y = sd->MAX_Y;
 		b.z = z_max;
 		viewer->addLine(a, b, _r,_g,_b, "line_x_1");
 
-		a.x = MIN_X;
-                a.y = MIN_Y;
+		a.x = sd->MIN_X;
+                a.y = sd->MIN_Y;
                 a.z = z_max;
-                b.x = MAX_X;
-                b.y = MIN_Y;
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_max;
 		viewer->addLine(a, b, _r,_g,_b, "line_x_2");
 
-		a.x = MIN_X;
-                a.y = MIN_Y;
+		a.x = sd->MIN_X;
+                a.y = sd->MIN_Y;
                 a.z = z_min;
-                b.x = MAX_X;
-                b.y = MIN_Y;
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_x_3");
 
-		a.x = MIN_X;
-                a.y = MAX_Y;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = MAX_X;
-                b.y = MAX_Y;
+                b.x = sd->MAX_X;
+                b.y = sd->MAX_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_x_4");
 
-		a.x = MIN_X;
-                a.y = MAX_Y;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_max;
-                b.x = MIN_X;
-                b.y = MIN_Y;
+                b.x = sd->MIN_X;
+                b.y = sd->MIN_Y;
                 b.z = z_max;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_1");
 
-		a.x = MAX_X;
-                a.y = MIN_Y;
+		a.x = sd->MAX_X;
+                a.y = sd->MIN_Y;
                 a.z = z_max;
-                b.x = MAX_X;
-                b.y = MIN_Y;
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_max;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_2");
 
-		a.x = MAX_X;
-                a.y = MAX_Y;
+		a.x = sd->MAX_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = MAX_X;
-                b.y = MIN_Y;
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_3");
 
-		a.x = MIN_X;
-                a.y = MAX_Y;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = MIN_X;
-                b.y = MIN_Y;
+                b.x = sd->MIN_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_4");
 
-		a.x = MIN_X;
-                a.y = MAX_Y;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = MAX_X;
-                b.y = MIN_Y;
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_d_min1");
 
-		a.x = MAX_X;
-                a.y = MAX_Y;
+		a.x = sd->MAX_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = MIN_X;
-                b.y = MIN_Y;
+                b.x = sd->MIN_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_d_min2");
 
@@ -216,9 +213,9 @@ public:
 		boost::mutex mutex;
 
 		//-------------------------------------
-		float touch_box_min_z=8.0;
-		float touch_box_max_z=8.2;
-		float cloud_filtered_max_z = 13.0;
+		float touch_box_min_z=TOUCH_Z_MAX-0.2;
+		float touch_box_max_z=TOUCH_Z_MAX;
+		float cloud_filtered_max_z = TOUCH_Z_MAX+4.8;
 		//-------------------------------------
 
 #ifdef ESTIMATE_MIN_MAX
@@ -285,9 +282,9 @@ public:
 				// Get_max_and_min_coordinates
 				// Get Z Minimum Point
 				/*
-                                z_minPt는 z값이 가장 작은 점의 xyz좌표를 담는 구조체,
-                                maxPt는 가장 큰 x, 가장 큰 y, 가장 큰 z를 각각 담는 구조체이다.
-                                */
+                                 * z_minPt는 z값이 가장 작은 점의 xyz좌표를 담는 구조체
+                                 * maxPt는 가장 큰 x, 가장 큰 y, 가장 큰 z를 각각 담는 구조체
+                                 */
 				pcl::PointXYZ z_minPt, maxPt;	
 
                                 pcl::getMinMax3D (*cloud_filtered, z_minPt, maxPt);
@@ -306,11 +303,11 @@ public:
 				std::cout << "z_minPt: ("<< z_minPt.x <<", "<< z_minPt.y <<")"<<std::endl;
 
 #ifdef ESTIMATE_MIN_MAX
-				// ---------------------------------------------------------Estimate MIN MAX START
-                                        /* 
-					화면 비율과 좌표를 맞추기 위해 cloud_touch의 MIN, MAX를 측정한다.
-                                        PointCloud 상의 최대 x, y 좌표를 측정하여 TouchBox의 해상도와  화면의 해상도를 매칭시키는 데 사용한다.
-					*/
+				// Estimate MIN MAX START
+                                /* 
+				 * 화면 비율과 좌표를 맞추기 위해 cloud_touch의 MIN, MAX를 측정한다.
+                                 * PointCloud 상의 최대 x, y 좌표를 측정하여 TouchBox의 해상도와  화면의 해상도를 매칭시키는 데 사용한다.
+				 */
 				if(cloud_touch->size() != 0)
 				{
 					pcl::PointXYZ minPt;
@@ -320,9 +317,9 @@ public:
                                         	MAX.x = maxPt.x;
                                 	if (MAX.y < maxPt.y)
                                        		MAX.y = maxPt.y;
-                                	if (MIN.x > z_minPt.x)
+                                	if (MIN.x > minPt.x)
                                         	MIN.x = minPt.x;
-                                	if (MIN.y > z_minPt.y)
+                                	if (MIN.y > minPt.y)
                                         	MIN.y = minPt.y;
 
                                 	std::cout << "MAX: " << "("<< MAX.x << ", "<< MAX.y << ")" <<std::endl;
@@ -330,12 +327,12 @@ public:
 					
 					draw_max_min_line(touch_box_max_z);
 				}
-				// ----------------------------------------------------------Estimate MIN MAX END
+				// Estimate MIN MAX END
 #endif
 
 				if (cloud_filtered->size() == 0 && exe_once == true)	// need for "pick_hold" mode	// 향후 조건 변경 if(strcmp(mode, "pick_hold") && exe_once == true)
 				{
-					fork_mouse_event(0, 0, (char *)"mouse_up");
+					fork_mouse_event(sd, 0, 0, (char *)"mouse_up");
 					exe_once = false;
 				}
 
@@ -364,21 +361,21 @@ public:
 
 
                                         // 조건 없이 터치가 되는 자리(touchPt)로 마우스 이동.
-					fork_mouse_event(touchPt.x, touchPt.y, (char *)"move");
+					fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"move");
 
 					if(!strcmp(mode, "click_once"))
-						fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
+						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					if(!strcmp(mode, "click_twice"))
 					{
-						fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
-						fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
+						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
+						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					}
 					// ++++++++++ MODE: "pick_hold"
 					if(!strcmp(mode, "pick_hold"))
 					{
 						if(exe_once == false)
 						{
-							fork_mouse_event(touchPt.x, touchPt.y, (char *)"mouse_down");
+							fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
 							exe_once = 1;
 						}
 					}
@@ -388,7 +385,7 @@ public:
 				{
 					if(exe_once == true)
 					{
-						fork_mouse_event(z_minPt.x, z_minPt.y, (char *)"move");
+						fork_mouse_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
 					}
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
 				}
@@ -457,14 +454,14 @@ public:
 					if (dis_variation  > 0.08)
 					{
 
-						fork_mouse_event(0.0, 0.0, (char *)"scroll_up");
+						fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_up");
 						dis.pop();
 						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");	// Windows size : 1280 X 960
 					}
 					else if (dis_variation < -0.08)
 					{
 
-						fork_mouse_event(0.0, 0.0, (char *)"scroll_down");
+						fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_down");
 						dis.pop();
 						viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
 					}
