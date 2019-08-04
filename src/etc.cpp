@@ -198,17 +198,17 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
         && pressed_finger[1][1]==false)
 		strcpy(mode, "nothing");
         	
-       // 오직 하나의 검지 손가락만 눌렸을 때?? 어떤 상황에서 pick_hold 모드로 들어갈>지는 향후에 변경
-        else if((pressed_finger[0][0]==true
-        && pressed_finger[0][1]==false
+       // 오직 하나의 중지만 눌렸을 때
+        else if((pressed_finger[0][0]==false
+        && pressed_finger[0][1]==true
         && pressed_finger[1][0]==false
         && pressed_finger[1][1]==false)
         || (pressed_finger[0][0]==false
         && pressed_finger[0][1]==false
-        && pressed_finger[1][0]==true
-        && pressed_finger[1][1]==false))
+        && pressed_finger[1][0]==false
+        && pressed_finger[1][1]==true))
         	strcpy(mode, "pick_hold");
-        // 두 손의 중지 손가락이 모두 눌렸을 때
+        // 두 손의 중지가 모두 눌렸을 때
         else if(pressed_finger[0][0]==false
         && pressed_finger[0][1]==true
         && pressed_finger[1][0]==false
