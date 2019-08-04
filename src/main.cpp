@@ -26,16 +26,13 @@
 
 #include "proj/etc.hpp"
 
-
-
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
 //#define Estimate_MIN_MAX				// TOUCH_Z_MAX를 변경할 경우, 주석을 해제하여 변경할 영역에서의 MIN, MAX 측정.
 //----------------------------------------------------------
 
-
-typedef pcl::PointXYZ PointT;
 using namespace std;
+typedef pcl::PointXYZ PointT;
 
 class GestureHandler
 {
@@ -62,13 +59,14 @@ private:
 	 * mode "pick_hold": (이 모드에 진입한 상태로 터치를 하면) 터치한 자리에 mousedown 클릭을 한다.
 	 * mode "": 
 	 */
-        char mode[1024];
+        char mode[32];
+	char mode_past[32];
 
 	/*
-	 * mode "zoom_scroll" 구현에 필요한 변수이다. 
-	 * mode "zoom_scrool" 유지, 해제에 이용된다.
+	 * mode "zoom_scroll"와 같은 모드의 유지, 해제에 이용된다. 
+	 * 어떠한 모드를 유지시킬 경우에는 true, 유지시키 않을 경우에는 false로 전환한다.
 	 */
-        int exe_once=0;
+        int exe_once=0;	
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
@@ -243,7 +241,7 @@ public:
 		/* Initialize Grabber Ptr ("interface") */
 		pcl::Grabber* interface = new pcl::io::OpenNI2Grabber(
                 "", pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz,
-                pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz);// QVGA_60Hz Recommended (VGA_30Hz or QVGA_60Hz)
+                pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz);		// QVGA_60Hz Recommended (VGA_30Hz or QVGA_60Hz)
 		
 		interface->registerCallback (f);
 
@@ -258,11 +256,18 @@ public:
 			boost::mutex::scoped_try_lock lock( mutex );
 			if( lock.owns_lock())
 			{
+
 				std::cout << "-----------------------------------------------------------" << std::endl;
 
-				// pressed_finger의 정보를 바탕으로 mode 설정.
+				// pressed_finger의 정보를 바탕으로 mode 지정.
 				detect_mode(mode, pressed_finger);
 				std::cout << "[detect_mode]: "<< mode << std::endl;
+
+				// Remove shapes to update shapes START
+				std::cout << "[REMOVE SHAPE]: ALL" << std::endl;
+				viewer->removeAllShapes();
+				// Reomve shapes END
+
 
 				// PassThrough Filtering START
 				pass.setInputCloud(cloud);
@@ -274,12 +279,6 @@ public:
 				pass.setFilterLimits(touch_box_min_z, touch_box_max_z);
 				pass.filter(*cloud_touch);	// This cloud_touch will be in Touch Box Field
 				// PassThrough Filtering END
-
-				
-				// Remove shapes to update shapes START
-				std::cout << "[REMOVE SHAPE]: ALL" << std::endl;
-				viewer->removeAllShapes();
-				// Reomve shapes END
 				
 				
 				// Get_max_and_min_coordinates
@@ -333,13 +332,32 @@ public:
 				// Estimate MIN MAX END
 #endif
 
-				if (cloud_filtered->size() == 0 && exe_once == true)	// need for "pick_hold" mode	// 향후 조건 변경 if(strcmp(mode, "pick_hold") && exe_once == true)
+
+
+				// If the mode is changed...
+				/*
+				 * 이전 프레임의 모드인 mode_past와 mode가 다를 경우(즉, 모드가 바뀌었을 경우)
+				 * 혹은 점 데이터가 없는 경우(즉, 손이 최대 인식 영역을 벗어났을 경우)
+				 * 모드를 위해 사용되었던 변수들을 기본 상태로 초기화해준다.
+				 */
+				if (strcmp(mode_past, mode) || cloud_filtered->size() == 0)				// This mean that the mode is changed.
 				{
-					fork_mouse_event(sd, 0, 0, (char *)"mouse_up");
-					exe_once = false;
+					fork_mouse_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
+					exe_once = false;					// pick_hold 모드 유지가 해제된다.
+
+					// "zoom" mode에 이용되던 큐 비우기
+					std::cout << "[CLEAR]: dis queue" << std::endl;
+					while(!dis.empty())
+					{
+						dis.pop();
+					}
+					std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;
 				}
 
-				// Handling Touch Box
+
+
+
+// -----------------------------Handling Touch Box START
 				// 터치되었을 때 작동
                                 if (cloud_touch->size() != 0)
                                 {
@@ -365,7 +383,7 @@ public:
 
                                         // 조건 없이 터치가 되는 자리(touchPt)로 마우스 이동.
 					fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"move");
-
+					
 					if(!strcmp(mode, "click_once"))
 						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					if(!strcmp(mode, "click_twice"))
@@ -373,120 +391,141 @@ public:
 						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
 						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					}
+
 					// ++++++++++ MODE: "pick_hold"
+					/* 
+					 * 하나의 중지를 활성화시킨 상태로 터치영역 안에 들어갔을 때부터 중지를 계속 활성되어 있는 동안 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)문 안에 넣는다.
+					 * 터치 여부와 관계없이 하나의 중지를 활성화시킨 상태일 때 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)밖에 둔다.
+					 */
 					if(!strcmp(mode, "pick_hold"))
 					{
 						if(exe_once == false)
 						{
 							fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
-							exe_once = 1;
+							exe_once = 1;		//터치 영역에 처음 들어간 순간부터 exe_once==true 인 동안 pick_hold모드를 유지 시킨다.
 						}
 					}
+
 					
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 0.0, 1.0, 0.0);
-                                }else
+                                }
+
+				else	// cloud_touch에 속한 점 데이터가 없을 경우
 				{
-					if(exe_once == true)
+					if(exe_once == true)	// 모드 유지가 활성화되어 있는 상태일 경우
 					{
-						fork_mouse_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
+
+						if(!strcpy(mode, "pick_hold"))					// "pick_hold" mode가 터치영역 밖에서 유지되어 있는 경우
+							fork_mouse_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
+						
+						//else if(!strcpy(mode, ""))
 					}
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
 				}
 
+// -----------------------------Handling Touch Box END
 
-				// ++++++++++ MODE: "zoom_scroll"
-				if ((!strcmp(mode, "zoom_scroll")) && cloud_filtered->size() != 0)
+
+
+// -----------------------------Handling NON Touch Box START
+
+				if (cloud_filtered->size() != 0 && cloud_touch->size() == 0)
 				{
-
-					// K-means clustering START
-                                	// (Use when the number of hands are known as two...)
-					pcl::Kmeans real(static_cast<int> (cloud_filtered->points.size()), 3);
-					real.setClusterSize(2);
-					for (size_t i = 0; i < cloud_filtered->points.size(); i++)	
+					// ++++++++++ MODE: "zoom_scroll"
+					if ((!strcmp(mode, "zoom_scroll")) && cloud_filtered->size() != 0)
 					{
-						std::vector<float> data(3);
-						data[0] = cloud_filtered->points[i].x;
-						data[1] = cloud_filtered->points[i].y;
-						data[2] = cloud_filtered->points[i].z;
-						real.addDataPoint(data);
-					}
 
-					real.kMeans();
-					pcl::Kmeans::Centroids centroids = real.get_centroids();
+						// K-means clustering START
+                                		// (Use when the number of hands are known as two...)
+						pcl::Kmeans real(static_cast<int> (cloud_filtered->points.size()), 3);
+						real.setClusterSize(2);
+						for (size_t i = 0; i < cloud_filtered->points.size(); i++)	
+						{
+							std::vector<float> data(3);
+							data[0] = cloud_filtered->points[i].x;
+							data[1] = cloud_filtered->points[i].y;
+							data[2] = cloud_filtered->points[i].z;
+							real.addDataPoint(data);
+						}
+
+						real.kMeans();
+						pcl::Kmeans::Centroids centroids = real.get_centroids();
+							
+						std::cout << "===== K-means Cluster Extraction =====" << std::endl;
+						pcl::PointXYZ centr1, centr2;
 					
-					std::cout << "===== K-means Cluster Extraction =====" << std::endl;
-					pcl::PointXYZ centr1, centr2;
+						centr1.x = centroids[0][0];
+						centr1.y = centroids[0][1];
+						centr1.z = centroids[0][2];
+	
+						centr2.x = centroids[1][0];
+						centr2.y = centroids[1][1];
+						centr2.z = centroids[1][2];
+	
+						std::cout << "centr1 : ("<< centr1.x << "," << centr1.y << ")"<<std::endl;
+						std::cout << "centr2 : ("<< centr2.x << "," << centr2.y << ")"<<std::endl;
+	
+						viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "sphere_0");
+						viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
+						// K-means clustering END
+					
+						
+						// QUEUE가 필요하지 않을 수도 있음. 후에 수정가능.
+						// Get distance between centr1 and centr2 and then PUSH it to the queue
+						dis.push(xy_distance(centr1, centr2));	//큐에는 거리의 변화량이 아니라 거리가 입력됨.
+						
+						// Make queue's size 3
+						if (dis.size()>3)
+						{
+							dis.pop();
+						}
+	
+						std::cout <<"dis queue BACK: " << dis.back() << std::endl;
+						std::cout <<"dis queue FRONT: " << dis.front() << std::endl;
+						
+						// Calculate xy_distance variation.
+						float dis_variation = dis.back() - dis.front();
+						std::cout << "dis_variation: " << dis_variation << std::endl;
+						
+						// for printing dis_variation.
+						char text[256];
+						sprintf(text, "%f", dis_variation);
+	
+						if (dis_variation  > 0.08)
+						{
+		
+							fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_up");
+							dis.pop();
+							viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");	// Windows size : 1280 X 960
+						}
+						else if (dis_variation < -0.08)
+						{
+	
+							fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_down");
+							dis.pop();
+							viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
+						}
+						else
+						{
+							viewer->addText(text, 1280/2, 960/2, 60, 0.0, 1.0, 0.0, "dis_variation");
+						}
 				
-					centr1.x = centroids[0][0];
-					centr1.y = centroids[0][1];
-					centr1.z = centroids[0][2];
-
-					centr2.x = centroids[1][0];
-					centr2.y = centroids[1][1];
-					centr2.z = centroids[1][2];
-
-					std::cout << "centr1 : ("<< centr1.x << "," << centr1.y << ")"<<std::endl;
-					std::cout << "centr2 : ("<< centr2.x << "," << centr2.y << ")"<<std::endl;
-
-					viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "sphere_0");
-					viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
-					// K-means clustering END
-					
-					
-					// QUEUE가 필요하지 않을 수도 있음. 후에 수정가능.
-					// Get distance between centr1 and centr2 and then PUSH it to the queue
-					dis.push(xy_distance(centr1, centr2));	//큐에는 거리의 변화량이 아니라 거리가 입력됨.
-					
-					// Make queue's size 3
-					if (dis.size()>3)
-					{
-						dis.pop();
 					}
 
-					std::cout <<"dis queue BACK: " << dis.back() << std::endl;
-					std::cout <<"dis queue FRONT: " << dis.front() << std::endl;
-					
-					// Calculate xy_distance variation
-					float dis_variation = dis.back() - dis.front();
-					std::cout << "dis_variation: " << dis_variation << std::endl;
-					
-					// for printing dis_variation
-					char text[256];
-					sprintf(text, "%f", dis_variation);
+					// ++++++++++ MODE: "circle"
+					//
+					//
 
-					if (dis_variation  > 0.08)
-					{
-
-						fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_up");
-						dis.pop();
-						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");	// Windows size : 1280 X 960
-					}
-					else if (dis_variation < -0.08)
-					{
-
-						fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_down");
-						dis.pop();
-						viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
-					}
-					else
-					{
-						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 1.0, 0.0, "dis_variation");
-					}
+				}
 				
-				}else
-				{
-					std::cout << "[CLEAR]: dis queue" << std::endl;
-					while(!dis.empty())
-					{
-						dis.pop();
-					}
-					std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;
 
-				}// "zoom_scroll" END
+// -----------------------------Handling NON Touch Box END
 
 
+				// 다음 프레임에서 이전의 프레임의 모드가 될 mode_past의 값 저장.
+				strcpy(mode_past, mode);
 
-				// Update cloud on viewer
+				// Update cloud on viewer.
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
 			}
