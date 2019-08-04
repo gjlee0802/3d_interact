@@ -1,6 +1,16 @@
-#ifndef __MAIN_HEADER__
-#define __MAIN_HEADER__
-
+/***********************************************************************\
+ *			Copyright (C) Gyeongju Lee, 2019	Ver0.2	*
+ * This program was created by a first-year student in the Department 	*
+ * of Smart Systems Software in preparation for the competition.		*
+ * This program was created to implement a technology that combines 	*
+ * DepthCamera and a hologram display.					*
+ * You can obtain information from sensors in your hand-held gloves and *
+ * interact with the transparent holographic display in a variety of 	*
+ * different ways.							*
+ *									*
+ * 									*
+ * Contact: gjlee0802@naver.com						*
+ \**********************************************************************/
 #include <iostream>
 
 #include <queue>
@@ -10,28 +20,69 @@
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl/ml/kmeans.h>	//	for K-means Cluster Extraction
+#include <pcl/ml/kmeans.h>				// for K-means Cluster Extraction
 
 #include <boost/thread.hpp>
 
 #include "proj/etc.hpp"
 
-#endif
+
+
+//-------------------<사용자 설정 값>-----------------------
+#define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
+//#define Estimate_MIN_MAX				// TOUCH_Z_MAX를 변경할 경우, 주석을 해제하여 변경할 영역에서의 MIN, MAX 측정.
+//----------------------------------------------------------
+
 
 typedef pcl::PointXYZ PointT;
 using namespace std;
 
-
-class HandViewer
+class GestureHandler
 {
-	public:
-		HandViewer () : viewer (new pcl::visualization::PCLVisualizer ("3D Viewer")) {}
-		int rm_cnt=0;
-		
-		int button_pressed=2;	// This should be changed simultaneously by arduino's informations
-		
-		queue<float> dis;	// Save distances between centr1 and centr2 in this vector container
+private:
+	/*
+	 * Screen_data: 터치영역과 출력화면의 정보를 담고 있는 구조체
+	 * 파라미터 입력용 포인터
+	 */
+	struct Screen_data screen_data;
+	struct Screen_data *sd = &screen_data;
 
+	/*
+	 *  pressed_finger[0][0]: 오른쪽 손 검지
+	 *  pressed_finger[0][1]: 오른쪽 손 중지
+	 *  pressed_finger[1][0]: 왼쪽 손 검지
+	 *  pressed_finger[1][1]: 왼쪽 손 중지
+	 */
+	int pressed_finger[2][2] = {{0,1}, {0,1}}; 	// This should be changed simultaneously by arduino's informations.
+        int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
+
+	/*
+	 * mode "nothing": 터치를 했을 경우 마우스 이동만 한다.
+	 * mode "zoom_scroll": (양손 사이의 거리를 늘이거나 줄이면) 줌 인 줌 아웃 기능을 한다.
+	 * mode "pick_hold": (이 모드에 진입한 상태로 터치를 하면) 터치한 자리에 mousedown 클릭을 한다.
+	 * mode "": 
+	 */
+        char mode[1024];
+
+	/*
+	 * mode "zoom_scroll" 구현에 필요한 변수이다. 
+	 * mode "zoom_scrool" 유지, 해제에 이용된다.
+	 */
+        int exe_once=0;
+
+        queue<float> dis;       			// Save distances between centr1 and centr2.
+
+public:	
+	/* Constructor(생성자) */
+	GestureHandler () : 
+		viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"))
+	{
+		this->viewer_set();
+		pressed_finger_Ptr = pressed_finger;
+		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
+	}
+
+	/* Viewer 설정 초기화 */
 	void viewer_set()
 	{
 		viewer->setFullScreen(false);
@@ -40,106 +91,148 @@ class HandViewer
 		viewer->setCameraPosition(0,0,-6.0, 0.0,0.0,0.0, 0.0,0.0,0.0, 0);
 	}
 
+	/* 터치 영역의 박스 정중앙을 기준으로 십자선을 그린다. */
+	void draw_max_min_line(float z_max)
+	{
+		pcl::PointXYZ a;
+		pcl::PointXYZ b;
+
+		a.x = sd->MIN_X;
+		a.y = (sd->MIN_Y+sd->MAX_Y)/2;
+		a.z = z_max;
+		
+		b.x = sd->MAX_X;
+		b.y = (sd->MIN_Y+sd->MAX_Y)/2;
+		b.z = z_max;
+		
+		viewer->addLine(a, b, 0, 0, 1.0, "Cloud_width");
+		
+		a.x = (sd->MIN_X+sd->MAX_X)/2;
+		a.y = sd->MIN_Y;
+		a.z = z_max;
+		
+		b.x = (sd->MIN_X+sd->MAX_X)/2;
+		b.y = sd->MAX_Y;
+		b.z = z_max;
+		
+		viewer->addLine(a, b, 0, 0, 1.0, "Cloud_height");
+	}
+
+	/*
+	 * Draw transparent box
+	 * 투명한 터치 영역 박스를 시각화.
+	 */
 	void draw_tp_box(float z_min, float z_max, double _r,  double _g, double _b)
 	{
 		pcl::PointXYZ a;
 		pcl::PointXYZ b;
 
-		float width = 8.0;
-		float height = 6.0;
-
-		a.x = width/2*(-1.0);
-		a.y = height/2;
+		a.x = sd->MIN_X;
+		a.y = sd->MAX_Y;
 		a.z = z_max;
-		b.x = width/2;
-		b.y = height/2;
+		b.x = sd->MAX_X;
+		b.y = sd->MAX_Y;
 		b.z = z_max;
 		viewer->addLine(a, b, _r,_g,_b, "line_x_1");
 
-		a.x = width/2*(-1.0);
-                a.y = height/2*(-1.0);
+		a.x = sd->MIN_X;
+                a.y = sd->MIN_Y;
                 a.z = z_max;
-                b.x = width/2;
-                b.y = height/2*(-1.0);
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_max;
 		viewer->addLine(a, b, _r,_g,_b, "line_x_2");
 
-		a.x = width/2*(-1.0);
-                a.y = height/2*(-1.0);
+		a.x = sd->MIN_X;
+                a.y = sd->MIN_Y;
                 a.z = z_min;
-                b.x = width/2;
-                b.y = height/2*(-1.0);
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_x_3");
 
-		a.x = width/2*(-1.0);
-                a.y = height/2;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = width/2;
-                b.y = height/2;
+                b.x = sd->MAX_X;
+                b.y = sd->MAX_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_x_4");
 
-		a.x = width/2*(-1.0);
-                a.y = height/2;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_max;
-                b.x = width/2*(-1.0);
-                b.y = height/2*(-1.0);
+                b.x = sd->MIN_X;
+                b.y = sd->MIN_Y;
                 b.z = z_max;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_1");
 
-		a.x = width/2;
-                a.y = height/2;
+		a.x = sd->MAX_X;
+                a.y = sd->MIN_Y;
                 a.z = z_max;
-                b.x = width/2;
-                b.y = height/2*(-1.0);
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_max;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_2");
 
-		a.x = width/2;
-                a.y = height/2;
+		a.x = sd->MAX_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = width/2;
-                b.y = height/2*(-1.0);
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_3");
 
-		a.x = width/2*(-1.0);
-                a.y = height/2;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = width/2*(-1.0);
-                b.y = height/2*(-1.0);
+                b.x = sd->MIN_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_y_4");
 
-		a.x = width/2*(-1.0);
-                a.y = height/2;
+		a.x = sd->MIN_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = width/2;
-                b.y = height/2*(-1.0);
+                b.x = sd->MAX_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_d_min1");
 
-		a.x = width/2;
-                a.y = height/2;
+		a.x = sd->MAX_X;
+                a.y = sd->MAX_Y;
                 a.z = z_min;
-                b.x = width/2*(-1.0);
-                b.y = height/2*(-1.0);
+                b.x = sd->MIN_X;
+                b.y = sd->MIN_Y;
                 b.z = z_min;
                 viewer->addLine(a, b, _r,_g,_b, "line_d_min2");
 
 	}
 
+
+	/* GestureHandler Main func */
 	void run ()
 	{
 		boost::mutex mutex;
 
-		float touch_box_min_z=6.2;
-		float touch_box_max_z=6.4;
+		//-------------------------------------
+		float touch_box_min_z=TOUCH_Z_MAX-0.2;
+		float touch_box_max_z=TOUCH_Z_MAX;
+		float cloud_filtered_max_z = TOUCH_Z_MAX+4.8;
+		//-------------------------------------
 
+#ifdef ESTIMATE_MIN_MAX
+		pcl::PointXYZ MIN; pcl::PointXYZ MAX;	// Use for estimating MAX values or MIN values of the coordinates.
+#endif
+
+		/*
+		 * cloud에 대해 'z'기준 PassThrough Filtering을 거친 것이 cloud_filtered 이다.
+		 * cloud_filtered에 대해 'z'기준 PassThrough Filtering을 거친 것이 cloud_touch 이다.
+		 */
 		pcl::PointCloud<PointT>::ConstPtr cloud (new pcl::PointCloud<PointT>);
 		pcl::PointCloud<PointT>::Ptr cloud_filtered (new pcl::PointCloud<PointT>);
 		pcl::PointCloud<PointT>::Ptr cloud_touch (new pcl::PointCloud<PointT>);
+
 
 		std::function<void (const pcl::PointCloud<PointT>::ConstPtr&)> f =
 		[&cloud, &mutex](const pcl::PointCloud<PointT>::ConstPtr &ptr ){
@@ -147,12 +240,11 @@ class HandViewer
 			cloud = ptr->makeShared();
 		};
 
-		// Initialize Grabber Pointer ("interface")
+		/* Initialize Grabber Ptr ("interface") */
 		pcl::Grabber* interface = new pcl::io::OpenNI2Grabber(
                 "", pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz,
                 pcl::io::OpenNI2Grabber::OpenNI_QVGA_60Hz);// QVGA_60Hz Recommended (VGA_30Hz or QVGA_60Hz)
-
-
+		
 		interface->registerCallback (f);
 
 		interface->start ();
@@ -168,13 +260,14 @@ class HandViewer
 			{
 				std::cout << "-----------------------------------------------------------" << std::endl;
 
-				// Print cloud->size()
-				std::cout << "cloud size : " << cloud->size() << std::endl;
+				// pressed_finger의 정보를 바탕으로 mode 설정.
+				detect_mode(mode, pressed_finger);
+				std::cout << "[detect_mode]: "<< mode << std::endl;
 
 				// PassThrough Filtering START
 				pass.setInputCloud(cloud);
 				pass.setFilterFieldName("z");
-				pass.setFilterLimits(0.0, 11.0);
+				pass.setFilterLimits(touch_box_min_z, cloud_filtered_max_z); //QVGA 기준 || 0.0~1.0?? in VGA
 				pass.filter(*cloud_filtered);
 
 				pass.setInputCloud(cloud_filtered);
@@ -191,35 +284,70 @@ class HandViewer
 				
 				// Get_max_and_min_coordinates
 				// Get Z Minimum Point
-				int current_min_index = 0;
-                                pcl::PointXYZ z_min_Pt;
-				pcl::PointXYZ minPt, maxPt;
+				/*
+                                 * z_minPt는 z값이 가장 작은 점의 xyz좌표를 담는 구조체
+                                 * maxPt는 가장 큰 x, 가장 큰 y, 가장 큰 z를 각각 담는 구조체
+                                 */
+				pcl::PointXYZ z_minPt, maxPt;	
 
-                                pcl::getMinMax3D (*cloud_filtered, minPt, maxPt);
-                                std::cout << "Min z: " << minPt.z << std::endl;
+                                pcl::getMinMax3D (*cloud_filtered, z_minPt, maxPt);
+
+                                std::cout << "Min z: " << z_minPt.z << std::endl;
 
 				for(size_t i=0; i < cloud_filtered->points.size(); i++)
 				{
-					if(cloud_filtered->points[i].z == minPt.z)
+					if(cloud_filtered->points[i].z == z_minPt.z)
 					{
-						minPt.x = cloud_filtered->points[i].x;
-						minPt.y = cloud_filtered->points[i].y;
+						z_minPt.x = cloud_filtered->points[i].x;
+						z_minPt.y = cloud_filtered->points[i].y;
 						break;
 					}
 				}
-				std::cout << "minPt: ("<< minPt.x <<", "<< minPt.y <<")"<<std::endl;
+				std::cout << "z_minPt: ("<< z_minPt.x <<", "<< z_minPt.y <<")"<<std::endl;
 
-				std::stringstream text;
-				text << "("<<minPt.x<<", "<<minPt.y<<")";
-				viewer -> addText(text.str(), 10, 10, "text_minPt");
-				
+#ifdef ESTIMATE_MIN_MAX
+				// Estimate MIN MAX START
+                                /* 
+				 * 화면 비율과 좌표를 맞추기 위해 cloud_touch의 MIN, MAX를 측정한다.
+                                 * PointCloud 상의 최대 x, y 좌표를 측정하여 TouchBox의 해상도와  화면의 해상도를 매칭시키는 데 사용한다.
+				 */
+				if(cloud_touch->size() != 0)
+				{
+					pcl::PointXYZ minPt;
+					pcl::getMinMax3D (*cloud_touch, minPt, maxPt);
+
+                                	if (MAX.x < maxPt.x)
+                                        	MAX.x = maxPt.x;
+                                	if (MAX.y < maxPt.y)
+                                       		MAX.y = maxPt.y;
+                                	if (MIN.x > minPt.x)
+                                        	MIN.x = minPt.x;
+                                	if (MIN.y > minPt.y)
+                                        	MIN.y = minPt.y;
+
+                                	std::cout << "MAX: " << "("<< MAX.x << ", "<< MAX.y << ")" <<std::endl;
+                                	std::cout << "MIN: " << "("<< MIN.x << ", "<< MIN.y << ")" <<std::endl;
+					
+					draw_max_min_line(touch_box_max_z);
+				}
+				// Estimate MIN MAX END
+#endif
+
+				if (cloud_filtered->size() == 0 && exe_once == true)	// need for "pick_hold" mode	// 향후 조건 변경 if(strcmp(mode, "pick_hold") && exe_once == true)
+				{
+					fork_mouse_event(sd, 0, 0, (char *)"mouse_up");
+					exe_once = false;
+				}
+
 				// Handling Touch Box
+				// 터치되었을 때 작동
                                 if (cloud_touch->size() != 0)
                                 {
 					
 					pcl::PointXYZ touchPt;
 
-                                	current_min_index = 0;
+					/* cloud_touch 터치 영역에서 Z좌표가 가장 작은 점을 지정 */
+                                	int current_min_index = 0;
                                 	for(size_t i=0; i < cloud_touch->points.size(); i++)
                                 	{
                                         	if(cloud_touch->points[i].z <= cloud_touch->points[current_min_index].z)
@@ -232,20 +360,42 @@ class HandViewer
                                 	touchPt.x = cloud_touch->points[current_min_index].x;
                                		touchPt.y = cloud_touch->points[current_min_index].y;
                                 	touchPt.z = cloud_touch->points[current_min_index].z;
-                                	viewer->addSphere(touchPt, 0.1, 0.0, 0.0, 1.0, "touchPt");	
+                                	viewer->addSphere(touchPt, 0.1, 0.0, 0.0, 1.0, "touchPt");
 
-                                        fork_mouse_event(touchPt.x, touchPt.y, (char *)"move");
-					//fork_mouse_event(touchPt.x, touchPt.y, (char *)"click");
 
+                                        // 조건 없이 터치가 되는 자리(touchPt)로 마우스 이동.
+					fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"move");
+
+					if(!strcmp(mode, "click_once"))
+						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
+					if(!strcmp(mode, "click_twice"))
+					{
+						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
+						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
+					}
+					// ++++++++++ MODE: "pick_hold"
+					if(!strcmp(mode, "pick_hold"))
+					{
+						if(exe_once == false)
+						{
+							fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
+							exe_once = 1;
+						}
+					}
+					
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 0.0, 1.0, 0.0);
                                 }else
 				{
+					if(exe_once == true)
+					{
+						fork_mouse_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
+					}
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
 				}
 
 
-				// Two hand gesture handler
-				if (button_pressed == 2)
+				// ++++++++++ MODE: "zoom_scroll"
+				if ((!strcmp(mode, "zoom_scroll")) && cloud_filtered->size() != 0)
 				{
 
 					// K-means clustering START
@@ -281,22 +431,47 @@ class HandViewer
 					viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "sphere_0");
 					viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "sphere_1");
 					// K-means clustering END
-				
-					// Get distance between centr1 and centr2
-					if (cloud_filtered->size() != 0)
-					{
-						dis.push(xy_distance(centr1, centr2));
-						std::cout << "xy_dis: " << dis.back() << std::endl;
-					}
-					if (dis.size()>10)	// 수정할 부분.. 거리의 변화에 따라 바꿔야 할 듯 
-					// (둘 사이의 거리가 거의 변화하지 않을 경우를 생각
-					// -> 만약 큐에 일정 개수 이상의 데이터가 쌓일 경우 앞부분부터 pop을 한다.)
-					// (거리가 일정 거리 이상 변화했을 경우를 생각
-					// -> 마우스를 컨트롤하고 while문을 통해 queue를 비운다.)
+					
+					
+					// QUEUE가 필요하지 않을 수도 있음. 후에 수정가능.
+					// Get distance between centr1 and centr2 and then PUSH it to the queue
+					dis.push(xy_distance(centr1, centr2));	//큐에는 거리의 변화량이 아니라 거리가 입력됨.
+					
+					// Make queue's size 3
+					if (dis.size()>3)
 					{
 						dis.pop();
 					}
+
+					std::cout <<"dis queue BACK: " << dis.back() << std::endl;
 					std::cout <<"dis queue FRONT: " << dis.front() << std::endl;
+					
+					// Calculate xy_distance variation
+					float dis_variation = dis.back() - dis.front();
+					std::cout << "dis_variation: " << dis_variation << std::endl;
+					
+					// for printing dis_variation
+					char text[256];
+					sprintf(text, "%f", dis_variation);
+
+					if (dis_variation  > 0.08)
+					{
+
+						fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_up");
+						dis.pop();
+						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");	// Windows size : 1280 X 960
+					}
+					else if (dis_variation < -0.08)
+					{
+
+						fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_down");
+						dis.pop();
+						viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
+					}
+					else
+					{
+						viewer->addText(text, 1280/2, 960/2, 60, 0.0, 1.0, 0.0, "dis_variation");
+					}
 				
 				}else
 				{
@@ -307,12 +482,11 @@ class HandViewer
 					}
 					std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;
 
-				}
+				}// "zoom_scroll" END
 
-				// Update viewer
-				
-				//viewer->addSphere(minPt, 0.1, 0.0, 0.0, 1.0, "minPt_z");
 
+
+				// Update cloud on viewer
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
 			}
@@ -327,9 +501,9 @@ class HandViewer
 
 int main (int argc, char** argv)
 {
-	HandViewer v;
-	v.viewer_set();
-	v.run ();
+	GestureHandler gh;
+	gh.run ();
+
 	return 0;
 }
 

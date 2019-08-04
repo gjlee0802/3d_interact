@@ -21,14 +21,13 @@ set(CMAKE_TARGET_DEFINITIONS_CXX
 
 # The include file search paths:
 set(CMAKE_CXX_TARGET_INCLUDE_PATH
+  "./include"
   "/usr/include/vtk-7.1"
   "/usr/include/freetype2"
-  "/usr/include/x86_64-linux-gnu"
   "/usr/local/include/pcl-1.9"
   "/usr/include/eigen3"
   "/usr/include/ni"
   "/usr/include/openni2"
-  "./include"
   )
 
 # Targets to which this target links.
