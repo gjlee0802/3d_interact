@@ -1,7 +1,7 @@
 /***********************************************************************\
  *			Copyright (C) Gyeongju Lee, 2019	Ver0.2	*
  * This program was created by a first-year student in the Department 	*
- * of Smart System Software in preparation for the competition.		*
+ * of Smart Systems Software in preparation for the competition.		*
  * This program was created to implement a technology that combines 	*
  * DepthCamera and a hologram display.					*
  * You can obtain information from sensors in your hand-held gloves and *
