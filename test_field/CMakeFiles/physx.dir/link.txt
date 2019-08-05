@@ -1,1 +1,0 @@
-/usr/bin/c++     -Wl,-rpath='$ORIGIN' -rdynamic CMakeFiles/physx.dir/physx.cpp.o  -o physx -lGL -lglut -lXmu -lXi 

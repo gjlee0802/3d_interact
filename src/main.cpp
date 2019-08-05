@@ -50,7 +50,7 @@ private:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2] = {{0,1}, {0,1}}; 	// This should be changed simultaneously by arduino's informations.
+	int pressed_finger[2][2] = {{0,0}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
         int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*
@@ -260,7 +260,8 @@ public:
 				std::cout << "-----------------------------------------------------------" << std::endl;
 
 				// pressed_finger의 정보를 바탕으로 mode 지정.
-				detect_mode(mode, pressed_finger);
+				//detect_mode(mode, pressed_finger);
+				strcpy(mode, "circle");
 				std::cout << "[detect_mode]: "<< mode << std::endl;
 
 				// Remove shapes to update shapes START
@@ -342,8 +343,11 @@ public:
 				 */
 				if (strcmp(mode_past, mode) || cloud_filtered->size() == 0)				// This mean that the mode is changed.
 				{
-					fork_mouse_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
-					exe_once = false;					// pick_hold 모드 유지가 해제된다.
+					if(exe_once = true)	//
+					{
+						fork_mouse_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
+						exe_once = false;					// pick_hold 모드 유지가 해제된다.
+					}
 
 					// "zoom" mode에 이용되던 큐 비우기
 					std::cout << "[CLEAR]: dis queue" << std::endl;
@@ -404,6 +408,7 @@ public:
 							fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
 							exe_once = 1;		//터치 영역에 처음 들어간 순간부터 exe_once==true 인 동안 pick_hold모드를 유지 시킨다.
 						}
+
 					}
 
 					
@@ -431,8 +436,9 @@ public:
 
 				if (cloud_filtered->size() != 0 && cloud_touch->size() == 0)
 				{
+
 					// ++++++++++ MODE: "zoom_scroll"
-					if ((!strcmp(mode, "zoom_scroll")) && cloud_filtered->size() != 0)
+					if (!strcmp(mode, "zoom_scroll"))
 					{
 
 						// K-means clustering START
@@ -458,6 +464,7 @@ public:
 						centr1.y = centroids[0][1];
 						centr1.z = centroids[0][2];
 	
+                          std::cout << "z_minPt: ("<< z_minPt.x <<", "<< z_minPt.y <<")"<<std::endl;
 						centr2.x = centroids[1][0];
 						centr2.y = centroids[1][1];
 						centr2.z = centroids[1][2];
@@ -513,7 +520,54 @@ public:
 					}
 
 					// ++++++++++ MODE: "circle"
-					//
+					if (!strcmp(mode, "circle"))
+					{
+
+						pcl::PointCloud<PointT>::Ptr cloud_fin (new pcl::PointCloud<PointT>);
+						
+						pass.setInputCloud(cloud_filtered);
+						pass.setFilterLimits(z_minPt.z, z_minPt.z+0.1);
+						pass.filter(*cloud_fin);
+						// PassThrough Filtering END
+
+						// K-means clustering START
+						pcl::Kmeans fin_real(static_cast<int> (cloud_fin->points.size()), 3);
+						fin_real.setClusterSize(3);
+						for (size_t i = 0; i < cloud_fin->points.size(); i++)	
+						{
+							std::vector<float> data(3);
+							data[0] = cloud_fin->points[i].x;
+							data[1] = cloud_fin->points[i].y;
+							data[2] = cloud_fin->points[i].z;
+							fin_real.addDataPoint(data);
+						}
+
+						fin_real.kMeans();
+						pcl::Kmeans::Centroids centroids = fin_real.get_centroids();
+							
+						std::cout << "===== K-means Cluster Extraction =====" << std::endl;
+						pcl::PointXYZ centr1, centr2, centr3;
+					
+						centr1.x = centroids[0][0];
+						centr1.y = centroids[0][1];
+						centr1.z = centroids[0][2];
+	
+						centr2.x = centroids[1][0];
+						centr2.y = centroids[1][1];
+						centr2.z = centroids[1][2];
+
+						centr3.x = centroids[2][0];
+						centr3.y = centroids[2][1];
+						centr3.z = centroids[2][2];
+
+						viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "fin_0");
+						viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "fin_1");
+						viewer->addSphere(centr3, 0.1, 1.0, 0.0, 0.0, "fin_2");
+
+						std::cout << "centr1 : ("<< centr1.x << "," << centr1.y << ")"<<std::endl;
+						std::cout << "centr2 : ("<< centr2.x << "," << centr2.y << ")"<<std::endl;
+						std::cout << "centr3 : ("<< centr3.x << "," << centr3.y << ")"<<std::endl;				
+					}
 					//
 
 				}

@@ -1,1 +1,0 @@
-/usr/bin/c++    -rdynamic CMakeFiles/gl.dir/cube.cpp.o  -o gl -lGL -lGLU -lglut -lXmu -lXi 

@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/cube_turn.dir/cube_turn.cpp.o  -o cube_turn -lGL -lGLU -lglut -lXmu -lXi 
