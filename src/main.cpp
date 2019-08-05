@@ -4,9 +4,9 @@
  * of Smart Systems Software in preparation for the competition.		*
  * This program was created to implement a technology that combines 	*
  * DepthCamera and a hologram display.					*
- * You can obtain information from sensors in your hand-held gloves and *
- * interact with the transparent holographic display in a variety of 	*
- * different ways.							*
+ * This Program can obtain information from sensors in your hand-held 	*
+ * gloves and interact with the transparent holographic display 	*
+ * in a variety of different ways.					*
  *									*
  * 									*
  * Contact: gjlee0802@naver.com						*
@@ -33,6 +33,7 @@
 
 using namespace std;
 typedef pcl::PointXYZ PointT;
+
 
 class GestureHandler
 {
@@ -70,10 +71,32 @@ private:
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
+
+	class GUI_3D
+	{
+	private:
+		void viewer_set(void)
+		{
+			gui_viewer->setFullScreen(false);
+			gui_viewer->setCameraPosition(0,0,-0.0, 0.0,0.0,1.0, 0.0,0.0,0.0);
+
+		}
+	public:
+		// Constructor(생성자)
+		GUI_3D():
+			gui_viewer (new pcl::visualization::PCLVisualizer("3D_GUI_Viewer"))
+		{
+			viewer_set();
+		}
+	
+		pcl::visualization::PCLVisualizer::Ptr gui_viewer;
+	}gui;
+	
+
 public:	
 	/* Constructor(생성자) */
 	GestureHandler () : 
-		viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"))
+		gui(), viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))	// 동적 메모리 할당
 	{
 		this->viewer_set();
 		pressed_finger_Ptr = pressed_finger;
@@ -582,6 +605,15 @@ public:
 				// Update cloud on viewer.
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
+
+				//TEST
+				pcl::PointXYZ p;
+				p.x = 0.0; 
+				p.y = 0.0;
+				p.z = 8.0;
+
+				gui.gui_viewer->removeAllShapes();
+				gui.gui_viewer->addSphere(p, 0.5, 0.0, 1.0, 0.0, "test");
 			}
 		}
 
@@ -590,6 +622,8 @@ public:
 
 	pcl::visualization::PCLVisualizer::Ptr viewer;
 };
+
+
 
 
 int main (int argc, char** argv)
