@@ -19,6 +19,8 @@ pcl/point_types.h
 -
 pcl/common/common.h
 -
+pcl/common/geometry.h
+-
 pcl/filters/passthrough.h
 -
 pcl/ml/kmeans.h
@@ -2158,6 +2160,12 @@ Eigen/Dense
 Eigen/Eigenvalues
 -
 pcl/common/impl/eigen.hpp
+-
+
+/usr/local/include/pcl-1.9/pcl/common/geometry.h
+Eigen/Core
+-
+pcl/console/print.h
 -
 
 /usr/local/include/pcl-1.9/pcl/common/impl/common.hpp

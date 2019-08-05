@@ -1,7 +1,7 @@
 /***********************************************************************\
  *			Copyright (C) Gyeongju Lee, 2019	Ver0.2	*
  * This program was created by a first-year student in the Department 	*
- * of Smart Systems Software in preparation for the competition.		*
+ * of Smart Systems Software in preparation for the competition.	*
  * This program was created to implement a technology that combines 	*
  * DepthCamera and a hologram display.					*
  * This Program can obtain information from sensors in your hand-held 	*
@@ -19,6 +19,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
+#include <pcl/common/geometry.h>			// for using distance();
 #include <pcl/filters/passthrough.h>
 #include <pcl/ml/kmeans.h>				// for K-means Cluster Extraction
 
@@ -28,6 +29,7 @@
 
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
+#define TEST_CUBE
 //#define Estimate_MIN_MAX				// TOUCH_Z_MAX를 변경할 경우, 주석을 해제하여 변경할 영역에서의 MIN, MAX 측정.
 //----------------------------------------------------------
 
@@ -71,165 +73,36 @@ private:
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
-/*
-	class GUI_3D
-	{
-	private:
-		void viewer_set(void)
-		{
-			gui_viewer->setFullScreen(false);
-			gui_viewer->setCameraPosition(0,0,-0.0, 0.0,0.0,1.0, 0.0,0.0,0.0);
-
-		}
-	public:
-		// Constructor(생성자)
-		GUI_3D():
-			gui_viewer (new pcl::visualization::PCLVisualizer("3D_GUI_Viewer"))
-		{
-			viewer_set();
-		}
-	
-		pcl::visualization::PCLVisualizer::Ptr gui_viewer;
-	}gui;
-*/	
+	int coll_detect(pcl::PointCloud<PointT>::Ptr, PointT, float, char *);
+	pcl::PointXYZ cube_centr;
+	void drawCustomCube(pcl::PointXYZ, float, double, double, double);
+	void draw_max_min_line(float);
+	void draw_tp_box(float, float, double, double, double);
 
 public:	
-	/* Constructor(생성자) */
-	GestureHandler () : 
-		viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))//,gui	// 동적 메모리 할당
-	{
-		this->viewer_set();
-		pressed_finger_Ptr = pressed_finger;
-		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
-	}
-
 	/* Viewer 설정 초기화 */
 	void viewer_set()
 	{
 		viewer->setFullScreen(false);
 		viewer->setSize(1280, 960);
 		//viewer->addCoordinateSystem(1.0);
-		viewer->setCameraPosition(0,0,-6.0, 0.0,0.0,0.0, 0.0,0.0,0.0, 0);
+		viewer->setCameraPosition(sd->Cloud_x_center, sd->Cloud_y_center, 30.0, 0.0,0.0,-1.0, 0.0,0.0,0.0, 0);
+
 	}
 
-	/* 터치 영역의 박스 정중앙을 기준으로 십자선을 그린다. */
-	void draw_max_min_line(float z_max)
+
+	/* Constructor(생성자) */
+	GestureHandler () : 
+		viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))	// 동적 메모리 할당
 	{
-		pcl::PointXYZ a;
-		pcl::PointXYZ b;
+		this->viewer_set();
+		pressed_finger_Ptr = pressed_finger;
+		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
 
-		a.x = sd->MIN_X;
-		a.y = (sd->MIN_Y+sd->MAX_Y)/2;
-		a.z = z_max;
-		
-		b.x = sd->MAX_X;
-		b.y = (sd->MIN_Y+sd->MAX_Y)/2;
-		b.z = z_max;
-		
-		viewer->addLine(a, b, 0, 0, 1.0, "Cloud_width");
-		
-		a.x = (sd->MIN_X+sd->MAX_X)/2;
-		a.y = sd->MIN_Y;
-		a.z = z_max;
-		
-		b.x = (sd->MIN_X+sd->MAX_X)/2;
-		b.y = sd->MAX_Y;
-		b.z = z_max;
-		
-		viewer->addLine(a, b, 0, 0, 1.0, "Cloud_height");
+		cube_centr.x = sd->Cloud_x_center;
+		cube_centr.y = sd->Cloud_y_center;
+		cube_centr.z = TOUCH_Z_MAX+1.0;
 	}
-
-	/*
-	 * Draw transparent box
-	 * 투명한 터치 영역 박스를 시각화.
-	 */
-	void draw_tp_box(float z_min, float z_max, double _r,  double _g, double _b)
-	{
-		pcl::PointXYZ a;
-		pcl::PointXYZ b;
-
-		a.x = sd->MIN_X;
-		a.y = sd->MAX_Y;
-		a.z = z_max;
-		b.x = sd->MAX_X;
-		b.y = sd->MAX_Y;
-		b.z = z_max;
-		viewer->addLine(a, b, _r,_g,_b, "line_x_1");
-
-		a.x = sd->MIN_X;
-                a.y = sd->MIN_Y;
-                a.z = z_max;
-                b.x = sd->MAX_X;
-                b.y = sd->MIN_Y;
-                b.z = z_max;
-		viewer->addLine(a, b, _r,_g,_b, "line_x_2");
-
-		a.x = sd->MIN_X;
-                a.y = sd->MIN_Y;
-                a.z = z_min;
-                b.x = sd->MAX_X;
-                b.y = sd->MIN_Y;
-                b.z = z_min;
-                viewer->addLine(a, b, _r,_g,_b, "line_x_3");
-
-		a.x = sd->MIN_X;
-                a.y = sd->MAX_Y;
-                a.z = z_min;
-                b.x = sd->MAX_X;
-                b.y = sd->MAX_Y;
-                b.z = z_min;
-                viewer->addLine(a, b, _r,_g,_b, "line_x_4");
-
-		a.x = sd->MIN_X;
-                a.y = sd->MAX_Y;
-                a.z = z_max;
-                b.x = sd->MIN_X;
-                b.y = sd->MIN_Y;
-                b.z = z_max;
-                viewer->addLine(a, b, _r,_g,_b, "line_y_1");
-
-		a.x = sd->MAX_X;
-                a.y = sd->MIN_Y;
-                a.z = z_max;
-                b.x = sd->MAX_X;
-                b.y = sd->MIN_Y;
-                b.z = z_max;
-                viewer->addLine(a, b, _r,_g,_b, "line_y_2");
-
-		a.x = sd->MAX_X;
-                a.y = sd->MAX_Y;
-                a.z = z_min;
-                b.x = sd->MAX_X;
-                b.y = sd->MIN_Y;
-                b.z = z_min;
-                viewer->addLine(a, b, _r,_g,_b, "line_y_3");
-
-		a.x = sd->MIN_X;
-                a.y = sd->MAX_Y;
-                a.z = z_min;
-                b.x = sd->MIN_X;
-                b.y = sd->MIN_Y;
-                b.z = z_min;
-                viewer->addLine(a, b, _r,_g,_b, "line_y_4");
-
-		a.x = sd->MIN_X;
-                a.y = sd->MAX_Y;
-                a.z = z_min;
-                b.x = sd->MAX_X;
-                b.y = sd->MIN_Y;
-                b.z = z_min;
-                viewer->addLine(a, b, _r,_g,_b, "line_d_min1");
-
-		a.x = sd->MAX_X;
-                a.y = sd->MAX_Y;
-                a.z = z_min;
-                b.x = sd->MIN_X;
-                b.y = sd->MIN_Y;
-                b.z = z_min;
-                viewer->addLine(a, b, _r,_g,_b, "line_d_min2");
-
-	}
-
 
 	/* GestureHandler Main func */
 	void run ()
@@ -256,8 +129,9 @@ public:
 
 
 		std::function<void (const pcl::PointCloud<PointT>::ConstPtr&)> f =
-		[&cloud, &mutex](const pcl::PointCloud<PointT>::ConstPtr &ptr ){
-			boost::mutex::scoped_lock lock( mutex );
+		[&cloud, &mutex](const pcl::PointCloud<PointT>::ConstPtr &ptr )
+		{
+			boost::mutex::scoped_lock lock( mutex );	// scoped_lock은 scope를 벗어나면 자동으로 unlock을 해준다.
 			cloud = ptr->makeShared();
 		};
 
@@ -276,8 +150,8 @@ public:
 		while (!viewer->wasStopped())
 		{
 			viewer->spinOnce();
-			boost::mutex::scoped_try_lock lock( mutex );
-			if( lock.owns_lock())
+			boost::mutex::scoped_try_lock lock( mutex );	// try_lock() 비동기식에 이용가능 자신의 lock이면 true를 반환, 아니면 false 반환
+			if(lock.owns_lock())
 			{
 
 				std::cout << "-----------------------------------------------------------" << std::endl;
@@ -355,8 +229,6 @@ public:
 				// Estimate MIN MAX END
 #endif
 
-
-
 				// If the mode is changed...
 				/*
 				 * 이전 프레임의 모드인 mode_past와 mode가 다를 경우(즉, 모드가 바뀌었을 경우)
@@ -365,7 +237,7 @@ public:
 				 */
 				if (strcmp(mode_past, mode) || cloud_filtered->size() == 0)				// This mean that the mode is changed.
 				{
-					if(exe_once == true)	//
+					if(exe_once == true)
 					{
 						fork_mouse_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
 						exe_once = false;					// pick_hold 모드 유지가 해제된다.
@@ -380,8 +252,12 @@ public:
 					std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;
 				}
 
-
-
+#ifdef TEST_CUBE		
+				if(coll_detect(cloud_filtered, cube_centr, 2.0, (char *)"CustomCube") == 1)
+					drawCustomCube(cube_centr, 2.0, 0.0, 0.0, 1.0);	
+				else
+					drawCustomCube(cube_centr, 2.0, 1.0, 0.0, 0.0);
+#endif
 
 // -----------------------------Handling Touch Box START
 				// 터치되었을 때 작동
@@ -442,9 +318,10 @@ public:
 					if(exe_once == true)	// 모드 유지가 활성화되어 있는 상태일 경우
 					{
 
-						if(!strcpy(mode, "pick_hold"))					// "pick_hold" mode가 터치영역 밖에서 유지되어 있는 경우
+						if(!strcmp(mode, "pick_hold"))	// "pick_hold" mode가 터치영역 밖에서 유지되어 있는 경우
+						{
 							fork_mouse_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
-						
+						}
 						//else if(!strcpy(mode, ""))
 					}
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
@@ -554,11 +431,6 @@ public:
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
 
-				//TEST
-				pcl::PointXYZ p;
-				p.x = 0.0; 
-				p.y = 0.0;
-				p.z = 8.0;
 			}
 		}
 
@@ -568,6 +440,166 @@ public:
 	pcl::visualization::PCLVisualizer::Ptr viewer;
 };
 
+/*
+ * First Parameter:  충돌을 검사할 PointCloud포인터
+ * Second Parameter: 충돌을 검사할 Shape의 위치(Position)
+ * Third Parameter:  충돌을 검사할 Shape의 길이 정보(CustomCube: 변의 길이, CustomSphere: 반지름의 길이)
+ * Fourth Parameter: 충돌을 검사할 Shape의 id
+ * 충돌이 검출되면 1를 반환하고 그렇지 않으면 0을 반환.
+ */
+int GestureHandler::coll_detect(pcl::PointCloud<PointT>::Ptr cloud, pcl::PointXYZ pos, float len, char *id)
+{
+	if(!strcmp(id, "CustomCube"))
+	{
+		for(int i=0; i < cloud->size(); i++)
+		{
+			if((cloud->points[i].x >= (pos.x-len/2)) && (cloud->points[i].y >= (pos.y-len/2)) && (cloud->points[i].z >= (pos.z-len/2)))
+				if((cloud->points[i].x <= (pos.x+len/2)) && (cloud->points[i].y <= (pos.y+len/2)) && (cloud->points[i].z <= (pos.z+len/2)))
+				{
+					std::cout << "[COLLISION_DETECTED]: (id)CustomCube"<<std::endl;
+					return 1;
+				}
+		}
+		return 0;
+	}
+	if(!strcmp(id, "CustomSphere"))
+	{
+		float dist;
+		for(int i=0; i < cloud->size(); i++)
+		{
+			dist = pcl::geometry::distance(cloud->points[i], pos);
+			if(dist <= len)
+			{
+				std::cout << "[COLLISION_DETECTED]: (id)CustomSphere"<<std::endl;
+				return 1;
+			}
+		}
+		return 0;
+	}
+}
+
+void GestureHandler::drawCustomCube(pcl::PointXYZ pos, float len, double r, double g, double b)
+{
+	viewer->addCube(pos.x-len/2, pos.x+len/2, pos.y-len/2, pos.y+len/2, pos.z-len/2, pos.z+len/2, r, g, b, "CustomCube");
+}
+
+/* 터치 영역의 박스 정중앙을 기준으로 십자선을 그린다. */
+void GestureHandler::draw_max_min_line(float z_max)
+{
+	pcl::PointXYZ a;
+	pcl::PointXYZ b;
+
+	a.x = sd->MIN_X;
+	a.y = (sd->MIN_Y+sd->MAX_Y)/2;
+	a.z = z_max;
+	
+	b.x = sd->MAX_X;
+	b.y = (sd->MIN_Y+sd->MAX_Y)/2;
+	b.z = z_max;
+	
+	viewer->addLine(a, b, 0, 0, 1.0, "Cloud_width");
+	
+	a.x = (sd->MIN_X+sd->MAX_X)/2;
+	a.y = sd->MIN_Y;
+	a.z = z_max;
+	
+	b.x = (sd->MIN_X+sd->MAX_X)/2;
+	b.y = sd->MAX_Y;
+	b.z = z_max;
+	
+	viewer->addLine(a, b, 0, 0, 1.0, "Cloud_height");
+}
+
+/*
+ * Draw transparent box
+ * 투명한 터치 영역 박스를 시각화.
+ */
+void GestureHandler::draw_tp_box(float z_min, float z_max, double _r,  double _g, double _b)
+{
+	pcl::PointXYZ a;
+	pcl::PointXYZ b;
+
+	a.x = sd->MIN_X;
+	a.y = sd->MAX_Y;
+	a.z = z_max;
+	b.x = sd->MAX_X;
+	b.y = sd->MAX_Y;
+	b.z = z_max;
+	viewer->addLine(a, b, _r,_g,_b, "line_x_1");
+
+	a.x = sd->MIN_X;
+	a.y = sd->MIN_Y;
+	a.z = z_max;
+	b.x = sd->MAX_X;
+	b.y = sd->MIN_Y;
+	b.z = z_max;
+	viewer->addLine(a, b, _r,_g,_b, "line_x_2");
+
+	a.x = sd->MIN_X;
+	a.y = sd->MIN_Y;
+	a.z = z_min;
+	b.x = sd->MAX_X;
+	b.y = sd->MIN_Y;
+	b.z = z_min;
+	viewer->addLine(a, b, _r,_g,_b, "line_x_3");
+
+	a.x = sd->MIN_X;
+	a.y = sd->MAX_Y;
+	a.z = z_min;
+	b.x = sd->MAX_X;
+	b.y = sd->MAX_Y;
+	b.z = z_min;
+	viewer->addLine(a, b, _r,_g,_b, "line_x_4");
+
+	a.x = sd->MIN_X;
+	a.y = sd->MAX_Y;
+	a.z = z_max;
+	b.x = sd->MIN_X;
+	b.y = sd->MIN_Y;
+	b.z = z_max;
+	viewer->addLine(a, b, _r,_g,_b, "line_y_1");
+
+	a.x = sd->MAX_X;
+	a.y = sd->MIN_Y;
+	a.z = z_max;
+	b.x = sd->MAX_X;
+	b.y = sd->MIN_Y;
+	b.z = z_max;
+	viewer->addLine(a, b, _r,_g,_b, "line_y_2");
+
+	a.x = sd->MAX_X;
+	a.y = sd->MAX_Y;
+	a.z = z_min;
+	b.x = sd->MAX_X;
+	b.y = sd->MIN_Y;
+	b.z = z_min;
+	viewer->addLine(a, b, _r,_g,_b, "line_y_3");
+
+	a.x = sd->MIN_X;
+	a.y = sd->MAX_Y;
+	a.z = z_min;
+	b.x = sd->MIN_X;
+	b.y = sd->MIN_Y;
+	b.z = z_min;
+	viewer->addLine(a, b, _r,_g,_b, "line_y_4");
+
+	a.x = sd->MIN_X;
+	a.y = sd->MAX_Y;
+	a.z = z_min;
+	b.x = sd->MAX_X;
+	b.y = sd->MIN_Y;
+	b.z = z_min;
+	viewer->addLine(a, b, _r,_g,_b, "line_d_min1");
+
+	a.x = sd->MAX_X;
+	a.y = sd->MAX_Y;
+	a.z = z_min;
+	b.x = sd->MIN_X;
+	b.y = sd->MIN_Y;
+	b.z = z_min;
+	viewer->addLine(a, b, _r,_g,_b, "line_d_min2");
+
+}
 
 
 
