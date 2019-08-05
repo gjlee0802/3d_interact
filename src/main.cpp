@@ -71,7 +71,7 @@ private:
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
-
+/*
 	class GUI_3D
 	{
 	private:
@@ -91,12 +91,12 @@ private:
 	
 		pcl::visualization::PCLVisualizer::Ptr gui_viewer;
 	}gui;
-	
+*/	
 
 public:	
 	/* Constructor(생성자) */
 	GestureHandler () : 
-		gui(), viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))	// 동적 메모리 할당
+		viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))//,gui	// 동적 메모리 할당
 	{
 		this->viewer_set();
 		pressed_finger_Ptr = pressed_finger;
@@ -283,8 +283,7 @@ public:
 				std::cout << "-----------------------------------------------------------" << std::endl;
 
 				// pressed_finger의 정보를 바탕으로 mode 지정.
-				//detect_mode(mode, pressed_finger);
-				strcpy(mode, "circle");
+				detect_mode(mode, pressed_finger);
 				std::cout << "[detect_mode]: "<< mode << std::endl;
 
 				// Remove shapes to update shapes START
@@ -366,7 +365,7 @@ public:
 				 */
 				if (strcmp(mode_past, mode) || cloud_filtered->size() == 0)				// This mean that the mode is changed.
 				{
-					if(exe_once = true)	//
+					if(exe_once == true)	//
 					{
 						fork_mouse_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
 						exe_once = false;					// pick_hold 모드 유지가 해제된다.
@@ -542,57 +541,6 @@ public:
 				
 					}
 
-					// ++++++++++ MODE: "circle"
-					if (!strcmp(mode, "circle"))
-					{
-
-						pcl::PointCloud<PointT>::Ptr cloud_fin (new pcl::PointCloud<PointT>);
-						
-						pass.setInputCloud(cloud_filtered);
-						pass.setFilterLimits(z_minPt.z, z_minPt.z+0.1);
-						pass.filter(*cloud_fin);
-						// PassThrough Filtering END
-
-						// K-means clustering START
-						pcl::Kmeans fin_real(static_cast<int> (cloud_fin->points.size()), 3);
-						fin_real.setClusterSize(3);
-						for (size_t i = 0; i < cloud_fin->points.size(); i++)	
-						{
-							std::vector<float> data(3);
-							data[0] = cloud_fin->points[i].x;
-							data[1] = cloud_fin->points[i].y;
-							data[2] = cloud_fin->points[i].z;
-							fin_real.addDataPoint(data);
-						}
-
-						fin_real.kMeans();
-						pcl::Kmeans::Centroids centroids = fin_real.get_centroids();
-							
-						std::cout << "===== K-means Cluster Extraction =====" << std::endl;
-						pcl::PointXYZ centr1, centr2, centr3;
-					
-						centr1.x = centroids[0][0];
-						centr1.y = centroids[0][1];
-						centr1.z = centroids[0][2];
-	
-						centr2.x = centroids[1][0];
-						centr2.y = centroids[1][1];
-						centr2.z = centroids[1][2];
-
-						centr3.x = centroids[2][0];
-						centr3.y = centroids[2][1];
-						centr3.z = centroids[2][2];
-
-						viewer->addSphere(centr1, 0.1, 1.0, 0.0, 0.0, "fin_0");
-						viewer->addSphere(centr2, 0.1, 1.0, 0.0, 0.0, "fin_1");
-						viewer->addSphere(centr3, 0.1, 1.0, 0.0, 0.0, "fin_2");
-
-						std::cout << "centr1 : ("<< centr1.x << "," << centr1.y << ")"<<std::endl;
-						std::cout << "centr2 : ("<< centr2.x << "," << centr2.y << ")"<<std::endl;
-						std::cout << "centr3 : ("<< centr3.x << "," << centr3.y << ")"<<std::endl;				
-					}
-					//
-
 				}
 				
 
@@ -611,9 +559,6 @@ public:
 				p.x = 0.0; 
 				p.y = 0.0;
 				p.z = 8.0;
-
-				gui.gui_viewer->removeAllShapes();
-				gui.gui_viewer->addSphere(p, 0.5, 0.0, 1.0, 0.0, "test");
 			}
 		}
 
