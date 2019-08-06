@@ -3,6 +3,7 @@
 
 #include <cmath>	// for calculating xy_distance
 #include <pcl/point_types.h>
+#include <pcl/visualization/pcl_visualizer.h>
 
 // for fork(), exec()
 #include <sys/types.h>
@@ -34,10 +35,18 @@ struct Screen_data {
         float Cloud_height   = (MAX_Y-MIN_Y);
 };
 
+struct WindowInputs {
+	char key_id[32];
+};
+
+
 float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
 
 int fork_mouse_event(struct Screen_data *, float, float, char *);
 
 int detect_mode(char *, int (* )[2]);
+
+void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &, void *);
+void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
 
 #endif

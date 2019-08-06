@@ -66,6 +66,12 @@ private:
 	char mode_past[32];
 
 	/*
+	 * keyboardEventOccured()에 파라미터로 입력된다. 
+	 * 마지막으로 입력된 키에 대한 정보가 저장된다.
+	 */
+	char key_id[32];
+
+	/*
 	 * mode "zoom_scroll"와 같은 모드의 유지, 해제에 이용된다. 
 	 * 어떠한 모드를 유지시킬 경우에는 true, 유지시키 않을 경우에는 false로 전환한다.
 	 */
@@ -73,9 +79,13 @@ private:
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
+#ifdef TEST_CUBE
+	pcl::PointXYZ shape_touchedPt;
 	int coll_detect(pcl::PointCloud<PointT>::Ptr, PointT, float, char *);
 	pcl::PointXYZ cube_centr;
 	void drawCustomCube(pcl::PointXYZ, float, double, double, double);
+#endif
+
 	void draw_max_min_line(float);
 	void draw_tp_box(float, float, double, double, double);
 
@@ -86,7 +96,7 @@ public:
 		viewer->setFullScreen(false);
 		viewer->setSize(1280, 960);
 		//viewer->addCoordinateSystem(1.0);
-		viewer->setCameraPosition(sd->Cloud_x_center, sd->Cloud_y_center, 30.0, 0.0,0.0,-1.0, 0.0,0.0,0.0, 0);
+		viewer->setCameraPosition(sd->Cloud_x_center, sd->Cloud_y_center, 25.0, 0.0,0.0,-1.0, 0.0,0.0,0.0, 0);
 
 	}
 
@@ -95,13 +105,24 @@ public:
 	GestureHandler () : 
 		viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))	// 동적 메모리 할당
 	{
-		this->viewer_set();
-		pressed_finger_Ptr = pressed_finger;
-		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
+
+		viewer_set();
+
+		viewer->registerMouseCallback(mouseEventOccurred, (void *)&viewer);
+		viewer->registerKeyboardCallback(keyboardEventOccurred, (void *)&key_id);
+
+#ifdef TEST_CUBE	
+		strcpy(mode, "cube_touch");// TEST_CUBE
 
 		cube_centr.x = sd->Cloud_x_center;
 		cube_centr.y = sd->Cloud_y_center;
 		cube_centr.z = TOUCH_Z_MAX+1.0;
+
+#endif
+
+		pressed_finger_Ptr = pressed_finger;
+		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
+	
 	}
 
 	/* GestureHandler Main func */
@@ -157,7 +178,10 @@ public:
 				std::cout << "-----------------------------------------------------------" << std::endl;
 
 				// pressed_finger의 정보를 바탕으로 mode 지정.
+#ifndef TEST_CUBE
 				detect_mode(mode, pressed_finger);
+#endif
+
 				std::cout << "[detect_mode]: "<< mode << std::endl;
 
 				// Remove shapes to update shapes START
@@ -252,12 +276,41 @@ public:
 					std::cout << "queue size after [CLEAR]: " << dis.size() << std::endl;
 				}
 
+
 #ifdef TEST_CUBE		
-				if(coll_detect(cloud_filtered, cube_centr, 2.0, (char *)"CustomCube") == 1)
-					drawCustomCube(cube_centr, 2.0, 0.0, 0.0, 1.0);	
-				else
-					drawCustomCube(cube_centr, 2.0, 1.0, 0.0, 0.0);
+
+				if(!strcmp(key_id, "key_a"))
+				{
+					strcpy(mode, "cube_pick");
+				}
+				else if(!strcmp(key_id, "key_s"))
+				{
+					strcpy(mode, "cube_touch");
+				}
+				
+				if(coll_detect(cloud_filtered, cube_centr, 2.0, (char *)"CustomCube") == true)	//충돌했을 경우
+				{
+					if(!strcmp(mode, "cube_touch"))
+						drawCustomCube(cube_centr, 2.0, 0.0, 0.0, 1.0);	
+					else if(!strcmp(mode, "cube_pick"))
+					{
+						cube_centr.x = z_minPt.x;
+						cube_centr.y = z_minPt.y;
+						cube_centr.z = z_minPt.z;
+						drawCustomCube(cube_centr, 2.0, 0.0, 0.0, 1.0);
+					}
+					
+				}
+				else	//충돌하지 않았을 경우
+				{
+					if(!strcmp(mode, "cube_touch"))
+						drawCustomCube(cube_centr, 2.0, 1.0, 0.0, 0.0);	
+					else if(!strcmp(mode, "cube_pick"))
+						drawCustomCube(cube_centr, 2.0, 0.0, 1.0, 0.0);
+				}
+
 #endif
+
 
 // -----------------------------Handling Touch Box START
 				// 터치되었을 때 작동
@@ -440,6 +493,8 @@ public:
 	pcl::visualization::PCLVisualizer::Ptr viewer;
 };
 
+
+#ifdef TEST_CUBE
 /*
  * First Parameter:  충돌을 검사할 PointCloud포인터
  * Second Parameter: 충돌을 검사할 Shape의 위치(Position)
@@ -457,6 +512,7 @@ int GestureHandler::coll_detect(pcl::PointCloud<PointT>::Ptr cloud, pcl::PointXY
 				if((cloud->points[i].x <= (pos.x+len/2)) && (cloud->points[i].y <= (pos.y+len/2)) && (cloud->points[i].z <= (pos.z+len/2)))
 				{
 					std::cout << "[COLLISION_DETECTED]: (id)CustomCube"<<std::endl;
+					this->shape_touchedPt = cloud->points[i];
 					return 1;
 				}
 		}
@@ -482,6 +538,8 @@ void GestureHandler::drawCustomCube(pcl::PointXYZ pos, float len, double r, doub
 {
 	viewer->addCube(pos.x-len/2, pos.x+len/2, pos.y-len/2, pos.y+len/2, pos.z-len/2, pos.z+len/2, r, g, b, "CustomCube");
 }
+#endif
+
 
 /* 터치 영역의 박스 정중앙을 기준으로 십자선을 그린다. */
 void GestureHandler::draw_max_min_line(float z_max)

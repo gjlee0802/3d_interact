@@ -8,6 +8,7 @@
  * z를 무시하고 x, y 좌표만을 고려하여 2차원 xy평면 상에서의 두 점 사이의 거리를 계산한다.
  * 계산한 거리를 반환한다.
  */
+
 float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 {
         float distance;
@@ -222,3 +223,41 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
 
 	return 1;
 }
+
+/*
+ * This is the method that handles the mouse events. 
+ * Every time any kind of mouse event is registered, this function will be called. 
+ * In order to see exactly what that event is, we need to extract that information from the event instance.
+ */
+
+void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,
+                            void *key_id_void)
+{
+  char *key_id = static_cast<char *> (key_id_void);
+
+  if (event.getKeySym () == "a" && event.keyDown ())
+  {
+	  std::cout << "[KEY_DOWN]: a was pressed" << std::endl;
+	  strcpy(key_id, "key_a");
+  }
+  else if (event.getKeySym () == "s" && event.keyDown())
+  {
+	  std::cout << "[KEY_DOWN]: s was pressed" << std::endl;
+	  strcpy(key_id, "key_s");
+  }
+
+}
+/*
+ *The same approach applies for the keyboard events.
+ */
+void mouseEventOccurred (const pcl::visualization::MouseEvent &event,
+                         void *viewer_void)
+{
+  pcl::visualization::PCLVisualizer *viewer = static_cast<pcl::visualization::PCLVisualizer *> (viewer_void);
+  if (event.getButton () == pcl::visualization::MouseEvent::LeftButton &&
+      event.getType () == pcl::visualization::MouseEvent::MouseButtonRelease)
+  {
+	  std::cout << "Left mouse button released at position (" << event.getX () << ", " << event.getY () << ")" << std::endl;
+  }
+}
+
