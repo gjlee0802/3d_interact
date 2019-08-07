@@ -59,7 +59,7 @@ private:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2] = {{0,0}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
+	int pressed_finger[2][2] = {{0,0}, {0,1}}; 	// This should be changed simultaneously by arduino's informations.
         int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*
@@ -81,7 +81,14 @@ private:
 	 * mode "zoom_scroll"와 같은 모드의 유지, 해제에 이용된다. 
 	 * 어떠한 모드를 유지시킬 경우에는 true, 유지시키 않을 경우에는 false로 전환한다.
 	 */
-        int exe_once=0;	
+        int exe_once=0;		// bool형으로 고칠 것
+
+	/*
+	 * 프레임마다 클릭을 반복하지 않고, 
+	 * 터치 박스 영역에 입력이 들어왔을 경우 
+	 * 한번만 클릭을 수행하도록 하기 위해 이용된다.
+	 */
+	bool last_frame_touched = false;
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
 
@@ -90,7 +97,7 @@ private:
 	int coll_detect(pcl::PointCloud<PointT>::Ptr, PointT, float, char *);
 	pcl::PointXYZ cube_centr;
 	pcl::PointXYZ cube_past;
-	void drawCustomCube(pcl::PointXYZ, float, double, double, double);
+	void drawCustomCube(PointT, float, double, double, double);
 #endif
 
 	void draw_max_min_line(float);
@@ -125,7 +132,7 @@ public:
 		cube_centr.y = sd->Cloud_y_center;
 		cube_centr.z = TOUCH_Z_MAX+1.0;
 
-#endif
+#endif//TEST_CUBE
 
 		pressed_finger_Ptr = pressed_finger;
 		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
@@ -145,7 +152,7 @@ public:
 
 #ifdef ESTIMATE_MIN_MAX
 		pcl::PointXYZ MIN; pcl::PointXYZ MAX;	// Use for estimating MAX values or MIN values of the coordinates.
-#endif
+#endif//ESTIMATE_MIN_MAX
 
 		/*
 		 * cloud에 대해 'z'기준 PassThrough Filtering을 거친 것이 cloud_filtered 이다.
@@ -187,7 +194,7 @@ public:
 				// pressed_finger의 정보를 바탕으로 mode 지정.
 #ifndef TEST_CUBE
 				detect_mode(mode, pressed_finger);
-#endif
+#endif//TEST_CUBE
 
 				std::cout << "[detect_mode]: "<< mode << std::endl;
 
@@ -258,7 +265,7 @@ public:
 					draw_max_min_line(touch_box_max_z);
 				}
 				// Estimate MIN MAX END
-#endif
+#endif//ESTIMATE_MIN_MAX
 
 				// If the mode is changed...
 				/*
@@ -285,7 +292,6 @@ public:
 
 
 #ifdef TEST_CUBE
-
 				if(!strcmp(key_id, "key_t"))
 				{
 					strcpy(mode, "cube_pick");
@@ -338,7 +344,14 @@ public:
 						drawCustomCube(cube_centr, TEST_CUBE_LEN, 0.0, 1.0, 0.0);
 				}
 
-#endif
+#endif//TEST_CUBE
+
+//------------------------------Interact with UNITY 3d
+#ifdef UNITY_MODE
+
+
+#endif//UNITY_MODE
+
 
 
 // -----------------------------Handling Touch Box START
@@ -367,7 +380,14 @@ public:
 
                                         // 조건 없이 터치가 되는 자리(touchPt)로 마우스 이동.
 					fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"move");
-				
+#ifdef UNITY_MODE
+					if (!last_frame_touched)
+					{
+						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
+					}
+					last_frame_touched = true;
+#endif//UNIIY_MODE
+
 					if(!strcmp(mode, "click_once"))
 						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					if(!strcmp(mode, "click_twice"))
@@ -376,6 +396,7 @@ public:
 						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					}
 
+#ifndef UNITY_MODE
 					// ++++++++++ MODE: "pick_hold"
 					/* 
 					 * 하나의 중지를 활성화시킨 상태로 터치영역 안에 들어갔을 때부터 중지를 계속 활성되어 있는 동안 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)문 안에 넣는다.
@@ -390,13 +411,16 @@ public:
 						}
 
 					}
+#endif//UNITY_MODE
 
 					
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 0.0, 1.0, 0.0);
                                 }
 
-				else	// cloud_touch에 속한 점 데이터가 없을 경우
+				else	// cloud_touch에 속한 점 데이터가 없을 경우 (터치하지 않았을 경우)
 				{
+					last_frame_touched = false;
+
 					if(exe_once == true)	// 모드 유지가 활성화되어 있는 상태일 경우
 					{
 
@@ -418,6 +442,29 @@ public:
 				if (cloud_filtered->size() != 0 && cloud_touch->size() == 0)
 				{
 
+#ifdef UNITY_MODE
+					// ++++++++++ MODE: "pick_hold" (in UNITY_MODE)
+					if (!strcmp(mode, "pick_hold"))
+					{
+						float z_variation=0.0;
+						dis.push(z_minPt.z);
+						if(dis.size()>2)
+						{
+							dis.pop();
+							z_variation = dis.back() - dis.front();
+						}
+						
+						if(z_variation > 0.05)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Down");
+						}
+						else if(z_variation < -0.05)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Up");
+						}
+					}
+
+#endif//UNITY_MODE
 					// ++++++++++ MODE: "zoom_scroll"
 					if (!strcmp(mode, "zoom_scroll"))
 					{

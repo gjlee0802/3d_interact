@@ -137,14 +137,14 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 
 			else if(!strcmp(command, "key_Up"))
 			{
-				std::cout << "[xdotool KEY]: up" << std::endl;
+				std::cout << "[xdotool KEY]: Up" << std::endl;
 				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Up", NULL);
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
 			else if(!strcmp(command, "key_Left"))
 			{
-				std::cout << "[xdotool KEY]: a" << std::endl;
+				std::cout << "[xdotool KEY]: Left" << std::endl;
 				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Left", NULL);
 				perror("[ERROR]: execlp");
 				exit(1);
@@ -152,7 +152,7 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 			}
 			else if(!strcmp(command, "key_Down"))
 			{
-				std::cout << "[xdotool KEY]: s" << std::endl;
+				std::cout << "[xdotool KEY]: Down" << std::endl;
 				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Down", NULL);
 				perror("[ERROR]: execlp");
 				exit(1);
@@ -160,7 +160,7 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 			}
 			else if(!strcmp(command, "key_Right"))
 			{
-				std::cout << "[xdotool KEY]: d" << std::endl;
+				std::cout << "[xdotool KEY]: Right" << std::endl;
 				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Right", NULL);
 				perror("[ERROR]: execlp");
 				exit(1);
