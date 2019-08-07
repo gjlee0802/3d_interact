@@ -29,7 +29,13 @@
 
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
-#define TEST_CUBE
+//#define TEST_CUBE
+#define UNITY_CUBE
+
+#ifdef TEST_CUBE
+#define TEST_CUBE_LEN	1.0
+#endif
+
 //#define Estimate_MIN_MAX				// TOUCH_Z_MAX를 변경할 경우, 주석을 해제하여 변경할 영역에서의 MIN, MAX 측정.
 //----------------------------------------------------------
 
@@ -83,6 +89,7 @@ private:
 	pcl::PointXYZ shape_touchedPt;
 	int coll_detect(pcl::PointCloud<PointT>::Ptr, PointT, float, char *);
 	pcl::PointXYZ cube_centr;
+	pcl::PointXYZ cube_past;
 	void drawCustomCube(pcl::PointXYZ, float, double, double, double);
 #endif
 
@@ -263,7 +270,7 @@ public:
 				{
 					if(exe_once == true)
 					{
-						fork_mouse_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
+						fork_xdotool_event(sd, 0, 0, (char *)"mouse_up");		// mouse_down을 해제시킨다.
 						exe_once = false;					// pick_hold 모드 유지가 해제된다.
 					}
 
@@ -277,36 +284,58 @@ public:
 				}
 
 
-#ifdef TEST_CUBE		
+#ifdef TEST_CUBE
 
-				if(!strcmp(key_id, "key_a"))
+				if(!strcmp(key_id, "key_t"))
 				{
 					strcpy(mode, "cube_pick");
 				}
-				else if(!strcmp(key_id, "key_s"))
+				else if(!strcmp(key_id, "key_y"))
 				{
 					strcpy(mode, "cube_touch");
 				}
 				
-				if(coll_detect(cloud_filtered, cube_centr, 2.0, (char *)"CustomCube") == true)	//충돌했을 경우
+				if(coll_detect(cloud_filtered, cube_centr, TEST_CUBE_LEN, (char *)"CustomCube") == true)	//충돌했을 경우
 				{
 					if(!strcmp(mode, "cube_touch"))
-						drawCustomCube(cube_centr, 2.0, 0.0, 0.0, 1.0);	
+						drawCustomCube(cube_centr, TEST_CUBE_LEN, 0.0, 0.0, 1.0);	
 					else if(!strcmp(mode, "cube_pick"))
 					{
 						cube_centr.x = z_minPt.x;
 						cube_centr.y = z_minPt.y;
 						cube_centr.z = z_minPt.z;
-						drawCustomCube(cube_centr, 2.0, 0.0, 0.0, 1.0);
+						/*
+						if(cube_centr.x > cube_past.x + 0.05)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Right");
+						}
+						else if(cube_centr.x < cube_past.x - 0.05)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Left");
+						}
+						*/
+						if(cube_centr.z > cube_past.z + 0.05)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Down");
+						}
+						else if(cube_centr.z < cube_past.z - 0.05)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Up");
+						}
+						cube_past.x = cube_centr.x;
+						cube_past.y = cube_centr.y;
+						cube_past.z = cube_centr.z;
+						
+						drawCustomCube(cube_centr, TEST_CUBE_LEN, 0.0, 0.0, 1.0);
 					}
 					
 				}
 				else	//충돌하지 않았을 경우
 				{
 					if(!strcmp(mode, "cube_touch"))
-						drawCustomCube(cube_centr, 2.0, 1.0, 0.0, 0.0);	
+						drawCustomCube(cube_centr, TEST_CUBE_LEN, 1.0, 0.0, 0.0);	
 					else if(!strcmp(mode, "cube_pick"))
-						drawCustomCube(cube_centr, 2.0, 0.0, 1.0, 0.0);
+						drawCustomCube(cube_centr, TEST_CUBE_LEN, 0.0, 1.0, 0.0);
 				}
 
 #endif
@@ -337,14 +366,14 @@ public:
 
 
                                         // 조건 없이 터치가 되는 자리(touchPt)로 마우스 이동.
-					fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"move");
-					
+					fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"move");
+				
 					if(!strcmp(mode, "click_once"))
-						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
+						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					if(!strcmp(mode, "click_twice"))
 					{
-						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
-						fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"click");
+						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
+						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					}
 
 					// ++++++++++ MODE: "pick_hold"
@@ -356,7 +385,7 @@ public:
 					{
 						if(exe_once == false)
 						{
-							fork_mouse_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
+							fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
 							exe_once = 1;		//터치 영역에 처음 들어간 순간부터 exe_once==true 인 동안 pick_hold모드를 유지 시킨다.
 						}
 
@@ -373,7 +402,7 @@ public:
 
 						if(!strcmp(mode, "pick_hold"))	// "pick_hold" mode가 터치영역 밖에서 유지되어 있는 경우
 						{
-							fork_mouse_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
+							fork_xdotool_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
 						}
 						//else if(!strcpy(mode, ""))
 					}
@@ -416,7 +445,6 @@ public:
 						centr1.y = centroids[0][1];
 						centr1.z = centroids[0][2];
 	
-                          std::cout << "z_minPt: ("<< z_minPt.x <<", "<< z_minPt.y <<")"<<std::endl;
 						centr2.x = centroids[1][0];
 						centr2.y = centroids[1][1];
 						centr2.z = centroids[1][2];
@@ -453,14 +481,14 @@ public:
 						if (dis_variation  > 0.08)
 						{
 		
-							fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_up");
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"scroll_up");
 							dis.pop();
 							viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");	// Windows size : 1280 X 960
 						}
 						else if (dis_variation < -0.08)
 						{
 	
-							fork_mouse_event(sd, 0.0, 0.0, (char *)"scroll_down");
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"scroll_down");
 							dis.pop();
 							viewer->addText(text, 1280/2, 960/2, 60, 1.0, 0.0, 0.0, "dis_variation");
 						}

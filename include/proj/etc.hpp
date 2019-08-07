@@ -42,7 +42,7 @@ struct WindowInputs {
 
 float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
 
-int fork_mouse_event(struct Screen_data *, float, float, char *);
+int fork_xdotool_event(struct Screen_data *, float, float, char *);
 
 int detect_mode(char *, int (* )[2]);
 

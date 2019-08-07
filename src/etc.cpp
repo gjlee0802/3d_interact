@@ -19,7 +19,7 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 }
 
 /*
- * fork_mouse_event(): 
+ * fork_xdotool_event(): 
  *
  * Fist Parameter: 스크린의 정보가 담긴 Screen_data구조체의 주소를 받는다.
  * Second/Third Parameter: Point Cloud Data 기준의 (x,y)좌표를 받는다.
@@ -32,7 +32,7 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
  * C의 부모 프로세스였던 프로세스B가 종료되었으므로 init소속의 프로세스가 되어 exec함수가 종료된 후에 정상종료한다.
  * (exec계열의 함수를 통해 마우스 제어 프로그램인 xdotool을 실행한다.)
  * 
- * -> double fork를 안하고 단일 fork를 한다면 scroll과 마우스 제어에서 시간이 상당히 소요되어 프레임 속도가 매우 저하됨.
+ * -> double fork를 안하고 단일 fork를 한다면 scroll과 같은 xdotool실행에서 시간이 상당히 소요되어 프레임 속도가 매우 저하됨.
  *
  * fork()를 실패하면 -1을 반환한다.
  * command 인식에 실패하면 0을 반환한다.
@@ -42,7 +42,7 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 pcl::PointXYZ mouse_past;
 pcl::PointXYZ mouse_now;
 
-int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
+int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 {
 	char x_buff[256];
 	char y_buff[256];
@@ -90,7 +90,7 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 		if(pid2 == 0)	// Child Process C
 		{
 			
-			std::cout << "[CALL MOUSE EVENT]: "<< command << std::endl;
+			std::cout << "[CALL xdotool EVENT]: "<< command << std::endl;
 
 			if(!strcmp(command, "move"))
 			{
@@ -99,7 +99,6 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
-	
 			else if(!strcmp(command, "click"))	// strcmp return 0(false) if they are same things..
 			{
 				std::cout << "[xdotool CLICK]: "<<"("<<x<<", "<<y<<")"<< std::endl;
@@ -107,7 +106,6 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
-
 			else if(!strcmp(command, "scroll_up"))
 			{
 				std::cout << "[xdotool SCROLL_UP]" << std::endl;
@@ -115,7 +113,6 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
-
 			else if(!strcmp(command, "scroll_down"))
 			{
 				std::cout << "[xdotool SCROLL_DOWN]" << std::endl;
@@ -123,7 +120,6 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
-		
 			else if(!strcmp(command, "mouse_down"))
 			{
 				std::cout << "[xdotool MOUSE_DOWN]" << std::endl;
@@ -131,7 +127,6 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
-
 			else if(!strcmp(command, "mouse_up"))
 			{
 				std::cout << "[xdotool MOUSE_UP]" << std::endl;
@@ -139,11 +134,44 @@ int fork_mouse_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
+
+			else if(!strcmp(command, "key_Up"))
+			{
+				std::cout << "[xdotool KEY]: up" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Up", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+			else if(!strcmp(command, "key_Left"))
+			{
+				std::cout << "[xdotool KEY]: a" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Left", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+				
+			}
+			else if(!strcmp(command, "key_Down"))
+			{
+				std::cout << "[xdotool KEY]: s" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Down", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+				
+			}
+			else if(!strcmp(command, "key_Right"))
+			{
+				std::cout << "[xdotool KEY]: d" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "5", "Right", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
 			else
 			{
-				std::cout << "[MOUSE EVENT]: UNKNOWN command!: "<< command << std::endl;
+				std::cout << "[xdotool WARNING]: Command not found!: "<< command << std::endl;
 				exit(0);
 			}
+
+
 
 		}
 		else if(pid2 > 0)	// Child Process B
@@ -209,12 +237,26 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
         && pressed_finger[1][0]==false
         && pressed_finger[1][1]==true))
         	strcpy(mode, "pick_hold");
+
         // 두 손의 중지가 모두 눌렸을 때
         else if(pressed_finger[0][0]==false
         && pressed_finger[0][1]==true
         && pressed_finger[1][0]==false
         && pressed_finger[1][1]==true)
                 strcpy(mode, "zoom_scroll");
+	
+	// 오직 하나의 검지만 눌렸을 때
+	else if((pressed_finger[0][0]==true
+	&& pressed_finger[0][1]==false
+	&& pressed_finger[1][0]==false
+	&& pressed_finger[1][1]==false)
+	|| (pressed_finger[0][0]==false
+	&& pressed_finger[0][1]==false
+	&& pressed_finger[1][0]==true
+	&& pressed_finger[1][1]==false))
+		strcpy(mode, "click_once");
+
+
         else
         {
                         std::cout << "[?]: Cannot detect the mode!" << std::endl;
@@ -235,15 +277,15 @@ void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,
 {
   char *key_id = static_cast<char *> (key_id_void);
 
-  if (event.getKeySym () == "a" && event.keyDown ())
+  if (event.getKeySym () == "t" && event.keyDown ())
   {
-	  std::cout << "[KEY_DOWN]: a was pressed" << std::endl;
-	  strcpy(key_id, "key_a");
+	  std::cout << "[KEY]: t was pressed" << std::endl;
+	  strcpy(key_id, "key_t");
   }
-  else if (event.getKeySym () == "s" && event.keyDown())
+  else if (event.getKeySym () == "y" && event.keyDown())
   {
-	  std::cout << "[KEY_DOWN]: s was pressed" << std::endl;
-	  strcpy(key_id, "key_s");
+	  std::cout << "[KEY]: y was pressed" << std::endl;
+	  strcpy(key_id, "key_y");
   }
 
 }
