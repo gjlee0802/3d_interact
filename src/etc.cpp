@@ -79,7 +79,7 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 	
 	int status;
 	pid_t pid1;	// Child Process B
-	pid_t pid2;
+	pid_t pid2;	// Child Process C
 
 	pid1 = fork();
 
@@ -302,4 +302,59 @@ void mouseEventOccurred (const pcl::visualization::MouseEvent &event,
 	  std::cout << "Left mouse button released at position (" << event.getX () << ", " << event.getY () << ")" << std::endl;
   }
 }
+
+int fork_unity()
+{
+	int status;
+	pid_t pid1;	// Child Process B
+	pid_t pid2;	// Child Process C
+
+	pid1 = fork();
+
+	if(pid1 == 0)	// Child Process B
+	{
+		pid2 = fork();
+
+		if(pid2 == 0)	// Child Process C
+		{
+			std::cout << "[EXECUTE UNITY_3D]" << std::endl;
+			
+			execl("/home/user/workspace/proj/unity3d/bin/test.x86_64", "/home/user/workspace/proj/unity3d/bin/test.x86_64", NULL);
+			perror("[ERROR]: execl");
+			exit(1);
+		}
+		else if(pid2 > 0)	// Child Process B
+		{
+			exit(0);
+		}
+		else
+		{
+			/*error*/
+			std::cout << "[ERROR]: fork" << std::endl;
+			return -1;
+		}
+
+	}
+	else if(pid1 > 0)	// Parent Process get child process's PID
+	{
+
+		std::cout << "Parent: wait Child Process"<< "("<<pid1<<")" << std::endl;
+		waitpid(pid1, &status, 0);
+		if(WIFEXITED(status))
+		{
+			std::cout << "Child process killed" << std::endl;
+			return 1;
+		}
+
+	}
+	else if(pid1 < -1)
+	{
+		std::cout << "[ERROR]: fork" << std::endl;
+		return -1;
+	}
+
+
+}
+
+
 

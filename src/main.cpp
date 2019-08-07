@@ -30,7 +30,7 @@
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
 //#define TEST_CUBE
-#define UNITY_MODE
+#define UNITY_MODE					// Unity3D 연동 모드.
 
 #ifdef TEST_CUBE
 #define TEST_CUBE_LEN	1.0
@@ -127,12 +127,13 @@ public:
 
 #ifdef TEST_CUBE	
 		strcpy(mode, "cube_touch");// TEST_CUBE
-
 		cube_centr.x = sd->Cloud_x_center;
 		cube_centr.y = sd->Cloud_y_center;
 		cube_centr.z = TOUCH_Z_MAX+1.0;
-
 #endif//TEST_CUBE
+#ifdef UNITY_MODE
+		fork_unity();
+#endif//UNITY_MODE
 
 		pressed_finger_Ptr = pressed_finger;
 		detect_mode(mode, pressed_finger_Ptr);	// 함수 2번째 파라미터에 2차원 포인터 변수를 넘겨준다.
@@ -190,9 +191,8 @@ public:
 			{
 
 				std::cout << "-----------------------------------------------------------" << std::endl;
-
-				// pressed_finger의 정보를 바탕으로 mode 지정.
 #ifndef TEST_CUBE
+				// pressed_finger의 정보를 바탕으로 mode 지정.
 				detect_mode(mode, pressed_finger);
 #endif//TEST_CUBE
 
@@ -345,12 +345,6 @@ public:
 				}
 
 #endif//TEST_CUBE
-
-//------------------------------Interact with UNITY 3d
-#ifdef UNITY_MODE
-
-
-#endif//UNITY_MODE
 
 
 

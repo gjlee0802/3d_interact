@@ -49,4 +49,6 @@ int detect_mode(char *, int (* )[2]);
 void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &, void *);
 void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
 
+int fork_unity();
+
 #endif
