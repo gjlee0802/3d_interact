@@ -1,3 +1,16 @@
+/***********************************************************************\
+ *			Copyright (C) Gyeongju Lee, 2019	Ver0.3	*
+ * This program was created by a first-year student in the Department 	*
+ * of Smart Systems Software in preparation for the competition.	*
+ * This program was created to implement a technology that combines 	*
+ * DepthCamera and a hologram display.					*
+ * This Program can obtain information from sensors in your hand-held 	*
+ * gloves and interact with the transparent holographic display 	*
+ * in a variety of different ways.					*
+ *									*
+ * 									*
+ * Contact: gjlee0802@naver.com						*
+ \**********************************************************************/
 #include "proj/etc.hpp"
 
 /* 
@@ -319,7 +332,8 @@ int fork_unity()
 		{
 			std::cout << "[EXECUTE UNITY_3D]" << std::endl;
 			
-			execl("/home/user/workspace/proj/unity3d/bin/test.x86_64", "/home/user/workspace/proj/unity3d/bin/test.x86_64", NULL);
+			//execl("/home/user/workspace/proj/unity3d/bin/test.x86_64", "/home/user/workspace/proj/unity3d/bin/test.x86_64", NULL);
+			execl("/home/user/workspace/test_unity/test/TEST.x86_64", "/home/user/workspace/test_unity/test/TEST.x86_64", NULL);
 			perror("[ERROR]: execl");
 			exit(1);
 		}
