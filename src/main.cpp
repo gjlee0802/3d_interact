@@ -30,7 +30,7 @@
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
 //#define TEST_CUBE
-#define UNITY_MODE					// Unity3D 연동 모드.
+//#define UNITY_MODE					// Unity3D 연동 모드.
 
 #ifdef TEST_CUBE
 #define TEST_CUBE_LEN	1.0
@@ -59,7 +59,7 @@ private:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2] = {{0,1}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
+	int pressed_finger[2][2] = {{0,0}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
         int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*
