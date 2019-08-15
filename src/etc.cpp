@@ -178,6 +178,21 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
+			else if(!strcmp(command, "key_T"))
+			{
+				std::cout << "[xdotool KEY]: T" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "1", "T", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+			else if(!strcmp(command, "key_Y"))
+			{
+				std::cout << "[xdotool KEY]: Y" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "1", "Y", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+
 			else
 			{
 				std::cout << "[xdotool WARNING]: Command not found!: "<< command << std::endl;

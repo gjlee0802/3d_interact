@@ -30,7 +30,7 @@
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
 //#define TEST_CUBE
-//#define UNITY_MODE					// Unity3D 연동 모드.
+#define UNITY_MODE					// Unity3D 연동 모드.
 
 #ifdef TEST_CUBE
 #define TEST_CUBE_LEN	1.0
@@ -59,7 +59,7 @@ private:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2] = {{0,0}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
+	int pressed_finger[2][2] = {{0,1}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
         int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*
@@ -91,6 +91,9 @@ private:
 	bool last_frame_touched = false;
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
+
+	queue<float> x_q;
+	queue<float> y_q;
 
 #ifdef TEST_CUBE
 	pcl::PointXYZ shape_touchedPt;
@@ -441,21 +444,60 @@ public:
 					if (!strcmp(mode, "pick_hold"))
 					{
 						float z_variation=0.0;
+						float x_variation=0.0;
+						float y_variation=0.0;
+						
 						dis.push(z_minPt.z);
+						x_q.push(z_minPt.x);
+						y_q.push(z_minPt.y);
+
 						if(dis.size()>2)
 						{
 							dis.pop();
 							z_variation = dis.back() - dis.front();
 						}
-						
+						if(x_q.size()>2)
+						{
+							x_q.pop();
+							x_variation = x_q.back() - x_q.front();
+						}
+						if(y_q.size()>2)
+						{
+							y_q.pop();
+							y_variation = y_q.back() - y_q.front();
+						}
+					
 						if(z_variation > 0.05)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Down");
+							fork_xdotool_event(sd, 0,0, (char *)"key_Y");
 						}
 						else if(z_variation < -0.05)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Up");
+							fork_xdotool_event(sd, 0,0, (char *)"key_T");
 						}
+//--------------------------------------------------
+						if(x_variation > 0.01)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Right");
+						}
+						else if(x_variation < -0.01)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Left");
+						}
+
+						if(y_variation > 0.01)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Up");//
+						}
+						else if(y_variation < -0.01)
+						{
+							fork_xdotool_event(sd, 0,0, (char *)"key_Down");//
+						}
+//-------------------------------------------------
+
+						
+						
+
 					}
 
 #endif//UNITY_MODE
