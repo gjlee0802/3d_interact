@@ -59,7 +59,7 @@ private:
 	 *  pressed_finger[1][0]: 왼쪽 손 검지
 	 *  pressed_finger[1][1]: 왼쪽 손 중지
 	 */
-	int pressed_finger[2][2] = {{0,1}, {0,0}}; 	// This should be changed simultaneously by arduino's informations.
+	int pressed_finger[2][2] = {{0,1}, {0,1}}; 	// This should be changed simultaneously by arduino's informations.
         int (*pressed_finger_Ptr)[2];			// pressed_finger를 파라미터로 전달하는 것을 목적으로 하는 2차원 포인터 변수.
 
 	/*

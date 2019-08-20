@@ -257,31 +257,31 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
         	
        // 오직 하나의 중지만 눌렸을 때
         else if((pressed_finger[0][0]==false
-        && pressed_finger[0][1]==true
-        && pressed_finger[1][0]==false
-        && pressed_finger[1][1]==false)
-        || (pressed_finger[0][0]==false
-        && pressed_finger[0][1]==false
-        && pressed_finger[1][0]==false
-        && pressed_finger[1][1]==true))
+              && pressed_finger[0][1]==true
+              && pressed_finger[1][0]==false
+              && pressed_finger[1][1]==false)
+              ||(pressed_finger[0][0]==false
+              && pressed_finger[0][1]==false
+              && pressed_finger[1][0]==false
+              && pressed_finger[1][1]==true))
         	strcpy(mode, "pick_hold");
 
         // 두 손의 중지가 모두 눌렸을 때
         else if(pressed_finger[0][0]==false
-        && pressed_finger[0][1]==true
-        && pressed_finger[1][0]==false
-        && pressed_finger[1][1]==true)
+             && pressed_finger[0][1]==true
+             && pressed_finger[1][0]==false
+             && pressed_finger[1][1]==true)
                 strcpy(mode, "zoom_scroll");
 	
 	// 오직 하나의 검지만 눌렸을 때
 	else if((pressed_finger[0][0]==true
-	&& pressed_finger[0][1]==false
-	&& pressed_finger[1][0]==false
-	&& pressed_finger[1][1]==false)
-	|| (pressed_finger[0][0]==false
-	&& pressed_finger[0][1]==false
-	&& pressed_finger[1][0]==true
-	&& pressed_finger[1][1]==false))
+	      && pressed_finger[0][1]==false
+	      && pressed_finger[1][0]==false
+	      && pressed_finger[1][1]==false)
+	      ||(pressed_finger[0][0]==false
+	      && pressed_finger[0][1]==false
+	      && pressed_finger[1][0]==true
+	      && pressed_finger[1][1]==false))
 		strcpy(mode, "click_once");
 
 
