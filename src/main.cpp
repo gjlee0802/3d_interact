@@ -563,8 +563,8 @@ public:
 	
 						if (dis_variation  > 0.08)
 						{
-		
 							fork_xdotool_event(sd, 0.0, 0.0, (char *)"scroll_up");
+							//input_event();
 							dis.pop();
 							viewer->addText(text, 1280/2, 960/2, 60, 0.0, 0.0, 1.0, "dis_variation");	// Windows size : 1280 X 960
 						}

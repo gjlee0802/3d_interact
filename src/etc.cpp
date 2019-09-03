@@ -55,6 +55,40 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
 pcl::PointXYZ mouse_past;
 pcl::PointXYZ mouse_now;
 
+
+//-----TESTING
+int input_event()
+{
+	struct input_event event, event_end;
+	int fd = open("dev/input/event3", O_RDWR);
+	
+	if(!fd)
+	{
+		printf("open() err: %s\n", strerror(errno));
+		return -1;
+	}
+	
+	memset(&event, 0, sizeof(event));
+	memset(&event_end, 0, sizeof(event_end));
+	
+	gettimeofday(&event.time, NULL);
+	event.type = EV_REL;
+	event.code = REL_WHEEL;
+	event.value = 1;
+
+	gettimeofday(&event_end.time, NULL);
+	event_end.type = EV_SYN;
+	event_end.code = SYN_REPORT;
+	event_end.value = 0;
+
+	write(fd, &event, sizeof(event));
+	write(fd, &event_end, sizeof(event_end));
+
+	close(fd);
+	return 1;
+}
+//-----
+
 int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 {
 	char x_buff[256];

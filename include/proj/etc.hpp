@@ -5,16 +5,18 @@
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
-// for fork(), exec()
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/time.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include <fcntl.h>
 #include <signal.h>
-
-// for strcpy()
-#include <string.h>
-
+#include <linux/input.h>
+#include <errno.h>
 
 struct Screen_data {
         //모니터 해상도에 따라 변경
@@ -39,8 +41,9 @@ struct WindowInputs {
 	char key_id[32];
 };
 
-
 float xy_distance(pcl::PointXYZ, pcl::PointXYZ);
+
+int input_event();
 
 int fork_xdotool_event(struct Screen_data *, float, float, char *);
 
