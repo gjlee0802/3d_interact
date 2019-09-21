@@ -200,21 +200,24 @@ proj: /usr/local/lib/libpcl_octree.so
 proj: /usr/local/lib/libpcl_gpu_utils.so
 proj: /usr/local/lib/libpcl_gpu_containers.so
 proj: /usr/local/lib/libpcl_common.so
+proj: /usr/lib/x86_64-linux-gnu/libboost_system.so
 proj: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so
+proj: /usr/lib/x86_64-linux-gnu/libboost_date_time.so
 proj: /usr/lib/x86_64-linux-gnu/libboost_iostreams.so
 proj: /usr/lib/x86_64-linux-gnu/libboost_serialization.so
+proj: /usr/lib/x86_64-linux-gnu/libboost_chrono.so
 proj: /usr/lib/x86_64-linux-gnu/libboost_regex.so
 proj: /usr/lib/x86_64-linux-gnu/libqhull.so
 proj: /usr/lib/libOpenNI.so
 proj: /usr/lib/libOpenNI2.so
 proj: /usr/lib/x86_64-linux-gnu/libboost_thread.so
+proj: /usr/lib/x86_64-linux-gnu/libboost_atomic.so
 proj: /usr/lib/x86_64-linux-gnu/libfreetype.so
 proj: /usr/lib/x86_64-linux-gnu/libz.so
 proj: /usr/lib/x86_64-linux-gnu/libjpeg.so
 proj: /usr/lib/x86_64-linux-gnu/libpng.so
 proj: /usr/lib/x86_64-linux-gnu/libtiff.so
 proj: /usr/lib/x86_64-linux-gnu/libexpat.so
-proj: /usr/lib/x86_64-linux-gnu/libboost_atomic.so
 proj: CMakeFiles/proj.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/user/workspace/proj/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable proj"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/proj.dir/link.txt --verbose=$(VERBOSE)

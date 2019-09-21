@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/time.h>
 #include <sys/stat.h>
@@ -17,6 +18,11 @@
 #include <signal.h>
 #include <linux/input.h>
 #include <errno.h>
+//for miniterm with pthread
+#include <pthread.h>
+#include <termios.h>
+
+
 
 struct Screen_data {
         //모니터 해상도에 따라 변경
@@ -51,6 +57,10 @@ int detect_mode(char *, int (* )[2]);
 
 void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &, void *);
 void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
+
+
+void *pthread_create(void *);
+pthread_t init_miniterm();
 
 int fork_unity();
 

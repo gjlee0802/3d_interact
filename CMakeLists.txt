@@ -20,4 +20,4 @@ SET(SRC_FILES src/main.cpp src/etc.cpp)
 include_directories(./include)
 
 add_executable (proj ${SRC_FILES})
-target_link_libraries (proj ${PCL_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries (proj ${PCL_LIBRARIES} ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

@@ -34,8 +34,8 @@
 #include <sys/wait.h>
 #include <string.h>
  
-#define DEFAULT_BAUDRATE   115200
-#define DEFAULT_SERDEVICE  "/dev/ttyS0"
+#define DEFAULT_BAUDRATE   9600
+#define DEFAULT_SERDEVICE  "/dev/rfcomm0"
 #define ENDMINITERM        0x1d
  
 volatile int stop = 0;
@@ -150,14 +150,18 @@ int main(int argc, char **argv)
     newstdtio.c_cc[VMIN]=1;
     newstdtio.c_cc[VTIME]=0;
     tcsetattr(0,TCSANOW,&newstdtio);
- 
+
+// fd 0 : stdin
+// fd 1 : stdout
+
     /* Terminal settings done: now enter the main I/O loops. */
     switch ( fork() )
     {
     case 0:
         close(1); /* stdout not needed */
-        for ( c = (char)getchar(); c != ENDMINITERM; c = (char)getchar() )
-            write(fd,&c,1);
+        for ( c = (char)getchar(); c != ENDMINITERM; c = (char)getchar() )	// ENDMINITERM => ASCII code 29 : CTRL + ]
+	    write(fd,&c,1);
+
         tcsetattr(fd,TCSANOW,&oldsertio);
         tcsetattr(0,TCSANOW,&oldstdtio);
         close(fd);
@@ -174,12 +178,14 @@ int main(int argc, char **argv)
         sa.sa_handler = child_handler;
         sa.sa_flags = 0;
         sigaction(SIGCHLD,&sa,NULL); /* handle dying child */
-        while ( !stop )
+        while ( !stop )	// sa.sa_handler define the stop
         {
+	//----------------------------------------
             read(fd,&c,1); /* modem */
             c = (char)c;
             write(1,&c,1); /* stdout */
         }
+	//----------------------------------------
         wait(NULL); /* wait for child to die or it will become a zombie */
         write(1, end_str, strlen(end_str));
         break;

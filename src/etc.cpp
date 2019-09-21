@@ -13,6 +13,10 @@
  \**********************************************************************/
 #include "proj/etc.hpp"
 
+/*통신할 블루투스 포트 경로*/
+#define	MODEM_DEV	"/dev/rfcomm0"
+
+
 /* 
  * xy_distance():
  * 
@@ -337,18 +341,18 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
 void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,
                             void *key_id_void)
 {
-  char *key_id = static_cast<char *> (key_id_void);
+	char *key_id = static_cast<char *> (key_id_void);
 
-  if (event.getKeySym () == "t" && event.keyDown ())
-  {
-	  std::cout << "[KEY]: t was pressed" << std::endl;
-	  strcpy(key_id, "key_t");
-  }
-  else if (event.getKeySym () == "y" && event.keyDown())
-  {
-	  std::cout << "[KEY]: y was pressed" << std::endl;
-	  strcpy(key_id, "key_y");
-  }
+	if (event.getKeySym () == "t" && event.keyDown ())
+  	{
+		std::cout << "[KEY]: t was pressed" << std::endl;
+		strcpy(key_id, "key_t");
+  	}
+  	else if (event.getKeySym () == "y" && event.keyDown())
+  	{
+		std::cout << "[KEY]: y was pressed" << std::endl;
+		strcpy(key_id, "key_y");
+  	}
 
 }
 /*
@@ -357,13 +361,73 @@ void keyboardEventOccurred (const pcl::visualization::KeyboardEvent &event,
 void mouseEventOccurred (const pcl::visualization::MouseEvent &event,
                          void *viewer_void)
 {
-  pcl::visualization::PCLVisualizer *viewer = static_cast<pcl::visualization::PCLVisualizer *> (viewer_void);
-  if (event.getButton () == pcl::visualization::MouseEvent::LeftButton &&
-      event.getType () == pcl::visualization::MouseEvent::MouseButtonRelease)
-  {
-	  std::cout << "Left mouse button released at position (" << event.getX () << ", " << event.getY () << ")" << std::endl;
-  }
+  	pcl::visualization::PCLVisualizer *viewer = static_cast<pcl::visualization::PCLVisualizer *> (viewer_void);
+
+  	if (event.getButton () == pcl::visualization::MouseEvent::LeftButton &&
+      	event.getType () == pcl::visualization::MouseEvent::MouseButtonRelease)
+  	{
+		std::cout << "Left mouse button released at position (" << event.getX () << ", " << event.getY () << ")" << std::endl;
+  	}
 }
+
+//--------------------(For Multi Thread Serial Reading)--------------------
+
+struct thread_arg
+{
+	int fd;
+};
+typedef struct thread_arg t_args;
+
+
+void *pthread_read(void *data)
+{
+	t_args *my_data = (t_args *)data;
+
+	char *buff;	//or init as array
+
+	char c;
+	while(1)
+	{
+
+		read(my_data->fd, &c, 1);
+		//printf("%c", c);
+
+		if(c == '\n')
+		{
+			// clean buffer
+			printf("\n\n\n");
+		}
+	}
+	
+	return NULL;
+}
+
+
+pthread_t init_miniterm()
+{
+	int fd;
+	pthread_t tid;
+
+	fd = open(MODEM_DEV, O_RDWR | O_NOCTTY);
+	if(fd < 0){perror(MODEM_DEV); exit(-1);}
+
+	t_args *data_struct = (t_args *)malloc(sizeof(t_args));
+
+	data_struct->fd = fd;
+
+	if(pthread_create(&tid, NULL, pthread_read, (void *)data_struct)==-1)
+	{
+		fprintf(stdout, "ERROR : pthread_create\n");
+
+		close(fd);
+		exit(-1);
+	}
+
+	//pthread_join(tid,NULL);	-> 프로그램 종료시 호출되도록 해야함. sigaction()... 시그널을 이용해야함.
+	return tid;
+}
+
+//------------------------------------------------------------------------
 
 int fork_unity()
 {

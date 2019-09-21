@@ -122,6 +122,8 @@ public:
 	GestureHandler () : 
 		viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))	// 동적 메모리 할당
 	{
+		pthread_t tid;
+		tid = init_miniterm();
 
 		viewer_set();
 
