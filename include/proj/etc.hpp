@@ -64,4 +64,6 @@ pthread_t init_miniterm();
 
 int fork_unity();
 
+void char_append(char *, char);
+
 #endif

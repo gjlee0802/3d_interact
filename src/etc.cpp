@@ -383,20 +383,62 @@ void *pthread_read(void *data)
 {
 	t_args *my_data = (t_args *)data;
 
-	char *buff;	//or init as array
+
+	char buff[1024];
+	int index;
+	int semi_cnt;			// 세미콜론의 수로 데이터의 개수를 구분(데이터의 개수는 (semi_cnt-1)과 같다.)
 
 	char c;
 	while(1)
 	{
+		int i=0; 
+		int j=0;
 
 		read(my_data->fd, &c, 1);
 		//printf("%c", c);
+		buff[index] = c;	// Buffer의 인덱스를 정하기 위한 변수
 
-		if(c == '\n')
+		if(c == ';')
 		{
+			semi_cnt++;
+		}
+		
+		if(c == '\n')		// Buffer가 가득참.
+		{
+			char *extracted_data[semi_cnt];
+			
+
+			while(i<=semi_cnt)
+			{
+				char word[30];
+				for(; j <= index; j++)	//종료문자 \0 전까지 반복
+				{
+					if(buff[j] != ';')
+					{
+						char_append(word, buff[j]);
+						
+					}
+					else if(buff[j] == ';')
+					{
+						i++;
+					}
+
+				}
+				printf("%s", word);
+			}
+
+
 			// clean buffer
+			for(; index>=0; index--)
+				buff[index] = '\0';	//Buffer을 종료문자로 채움
+			
+			semi_cnt = 0;
+			j=0;
+			index = 0;			
 			printf("\n\n\n");
 		}
+
+		index++;
 	}
 	
 	return NULL;
@@ -422,8 +464,8 @@ pthread_t init_miniterm()
 		close(fd);
 		exit(-1);
 	}
-
-	//pthread_join(tid,NULL);	-> 프로그램 종료시 호출되도록 해야함. sigaction()... 시그널을 이용해야함.
+	//pthread_join(tid,NULL);	-> 프로그램 종료시 호출되도록 해야함. sigaction()... 종료 시그널 이용
+	//free(data_struct);		-> 프로그램 종료시 호출되도록 해야함. sigaction()... 종료 시그널 이용
 	return tid;
 }
 
@@ -483,5 +525,12 @@ int fork_unity()
 
 }
 
-
+// 자체구현 문자열 끝에 문자 추가하는 함수
+void char_append(char *dst, char c)
+{
+	char *p = dst;
+	while(*p != '\0') p++;
+	*p = c;
+	*(p+1) = '\0';
+}
 
