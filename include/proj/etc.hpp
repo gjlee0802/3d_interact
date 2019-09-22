@@ -64,6 +64,7 @@ pthread_t init_miniterm();
 
 int fork_unity();
 
+// 문자열 처리 함수
 void char_append(char *, char);
 
 #endif

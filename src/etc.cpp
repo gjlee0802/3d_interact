@@ -383,64 +383,41 @@ void *pthread_read(void *data)
 {
 	t_args *my_data = (t_args *)data;
 
-
 	char buff[1024];
-	int index;
-	int semi_cnt;			// 세미콜론의 수로 데이터의 개수를 구분(데이터의 개수는 (semi_cnt-1)과 같다.)
+	int index = 0;
 
 	char c;
 	while(1)
 	{
-		int i=0; 
-		int j=0;
 
 		read(my_data->fd, &c, 1);
-		//printf("%c", c);
-		buff[index] = c;	// Buffer의 인덱스를 정하기 위한 변수
-
-		if(c == ';')
+		if(c == '\n')
 		{
-			semi_cnt++;
-		}
-		
-		if(c == '\n')		// Buffer가 가득참.
-		{
-			char *extracted_data[semi_cnt];
-			
-
-			while(i<=semi_cnt)
+			// Extract data START
+			char *ptr = strtok(buff, ";");
+			while(ptr != NULL)
 			{
-				char word[30];
-				for(; j <= index; j++)	//종료문자 \0 전까지 반복
-				{
-					if(buff[j] != ';')
-					{
-						char_append(word, buff[j]);
-						
-					}
-					else if(buff[j] == ';')
-					{
-						i++;
-					}
-
-				}
-				printf("%s", word);
+				printf("%s\n", ptr);
+				ptr = strtok(NULL, ";");
 			}
+			// Extract data END
 
 
-			// clean buffer
-			for(; index>=0; index--)
-				buff[index] = '\0';	//Buffer을 종료문자로 채움
-			
-			semi_cnt = 0;
-			j=0;
-			index = 0;			
-			printf("\n\n\n");
+			// Clean buffer START
+			while(buff[index] != '\0') index++;
+			while(index > 0)
+			{
+				index--;
+				buff[index] = '\0';
+			}
+			// Clean buffer END
+		}
+		else if(c != '\0')
+		{
+			char_append(buff, c);
 		}
 
-		index++;
 	}
-	
 	return NULL;
 }
 
@@ -525,7 +502,7 @@ int fork_unity()
 
 }
 
-// 자체구현 문자열 끝에 문자 추가하는 함수
+//문자열 끝에 문자 추가하는 함수
 void char_append(char *dst, char c)
 {
 	char *p = dst;
@@ -533,4 +510,5 @@ void char_append(char *dst, char c)
 	*p = c;
 	*(p+1) = '\0';
 }
+
 
