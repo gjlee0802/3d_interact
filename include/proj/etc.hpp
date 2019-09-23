@@ -60,7 +60,7 @@ void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
 
 
 void *pthread_create(void *);
-pthread_t init_miniterm();
+void *init_miniterm();
 
 int fork_unity();
 

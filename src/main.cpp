@@ -107,6 +107,12 @@ private:
 	void draw_tp_box(float, float, double, double, double);
 
 public:	
+//////////////////////////////////// Public Variables
+
+	void *data_struct_ptr;
+
+//////////////////////////////////// Public Functions
+
 	/* Viewer 설정 초기화 */
 	void viewer_set()
 	{
@@ -122,8 +128,8 @@ public:
 	GestureHandler () : 
 		viewer (new pcl::visualization::PCLVisualizer ("Gesture Handler 3D Viewer"))	// 동적 메모리 할당
 	{
-		pthread_t tid;
-		tid = init_miniterm();
+		
+		data_struct_ptr = init_miniterm();
 
 		viewer_set();
 
@@ -779,6 +785,9 @@ int main (int argc, char** argv)
 	GestureHandler gh;
 	gh.run ();
 
-	return 0;
+	free(gh.data_struct_ptr);
+
+	printf("---------------------PROGRAM EXIT-----------------------\n");
+	exit(0);
 }
 

@@ -381,6 +381,8 @@ typedef struct thread_arg t_args;
 
 void *pthread_read(void *data)
 {
+	pthread_detach(pthread_self());
+
 	t_args *my_data = (t_args *)data;
 
 	char buff[1024];
@@ -422,8 +424,9 @@ void *pthread_read(void *data)
 }
 
 
-pthread_t init_miniterm()
+void *init_miniterm()
 {
+
 	int fd;
 	pthread_t tid;
 
@@ -441,9 +444,8 @@ pthread_t init_miniterm()
 		close(fd);
 		exit(-1);
 	}
-	//pthread_join(tid,NULL);	-> 프로그램 종료시 호출되도록 해야함. sigaction()... 종료 시그널 이용
+	return data_struct;
 	//free(data_struct);		-> 프로그램 종료시 호출되도록 해야함. sigaction()... 종료 시그널 이용
-	return tid;
 }
 
 //------------------------------------------------------------------------
