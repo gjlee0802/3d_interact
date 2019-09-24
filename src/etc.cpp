@@ -1,5 +1,5 @@
 /***********************************************************************\
- *			Copyright (C) Gyeongju Lee, 2019	Ver0.3	*
+ *			Copyright (C) Gyeongju Lee, 2019	Ver0.6	*
  * This program was created by a first-year student in the Department 	*
  * of Smart Systems Software in preparation for the competition.	*
  * This program was created to implement a technology that combines 	*
@@ -385,10 +385,17 @@ void *pthread_read(void *data)
 
 	t_args *my_data = (t_args *)data;
 
+	// [0]        [1]	    [2]		  [3]		[4]	      [5]      [6]      [7]
+	// (hand_num);(finger_num1);(finger_val1);(finger_num2);(finger_val2);(gyro_x);(gyro_y);(gyro_z);
 	char buff[1024];
 	int index = 0;
 
 	char c;
+
+	int hand_num = 0;
+	int finger_num=0;
+	int finger_val=0;
+
 	while(1)
 	{
 
@@ -396,10 +403,35 @@ void *pthread_read(void *data)
 		if(c == '\n')
 		{
 			// Extract data START
+			int data_index=0;
+
 			char *ptr = strtok(buff, ";");
 			while(ptr != NULL)
 			{
-				printf("%s\n", ptr);
+				//printf("%s\n", ptr);
+				switch (data_index)
+				{
+				case 0:
+					hand_num = atoi(ptr);
+					break;
+				case 1:
+					finger_num = atoi(ptr);
+					break;
+				case 2:
+					finger_val = atoi(ptr);
+					pressed_finger[hand_num][finger_num] = finger_val;
+					break;
+				case 3:
+					finger_num = atoi(ptr);
+					break;
+				case 4:
+					finger_val = atoi(ptr);
+					if((finger_num==0 || finger_num==1) && (finger_val==0 || finger_val==1))
+						pressed_finger[hand_num][finger_num] = finger_val;
+					break;
+				}
+
+				data_index++;
 				ptr = strtok(NULL, ";");
 			}
 			// Extract data END

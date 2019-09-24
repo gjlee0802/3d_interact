@@ -18,11 +18,10 @@
 #include <signal.h>
 #include <linux/input.h>
 #include <errno.h>
-//for miniterm with pthread
 #include <pthread.h>
-#include <termios.h>
 
 
+extern int pressed_finger[2][2];
 
 struct Screen_data {
         //모니터 해상도에 따라 변경
@@ -57,7 +56,6 @@ int detect_mode(char *, int (* )[2]);
 
 void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &, void *);
 void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
-
 
 void *pthread_create(void *);
 void *init_miniterm();
