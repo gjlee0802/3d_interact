@@ -1,13 +1,7 @@
 /***********************************************************************\
- *			Copyright (C) Gyeongju Lee, 2019	Ver0.6	*
+ *			Copyright (C) Gyeongju Lee, 2019	Ver0.7	*
  * This program was created by a first-year student in the Department 	*
- * of Smart Systems Software in preparation for the competition.	*
- * This program was created to implement a technology that combines 	*
- * DepthCamera and a hologram display.					*
- * This Program can obtain information from sensors in your hand-held 	*
- * gloves and interact with the transparent holographic display 	*
- * in a variety of different ways.					*
- *									*
+ * of Smart Systems Software in preparation for the competition.	* 
  * 									*
  * Contact: gjlee0802@naver.com						*
  \**********************************************************************/
@@ -42,7 +36,7 @@
 using namespace std;
 typedef pcl::PointXYZ PointT;
 
-int pressed_finger[2][2] = {{0,1}, {0,1}};
+int pressed_finger[2][2] = {{0,0}, {0,0}};
 
 class GestureHandler
 {
@@ -92,6 +86,8 @@ private:
 	bool last_frame_touched = false;
 
         queue<float> dis;       			// Save distances between centr1 and centr2.
+
+	queue<PointT> point_q;
 
 	queue<float> x_q;
 	queue<float> y_q;
@@ -204,8 +200,12 @@ public:
 
 				std::cout << "-----------------------------------------------------------" << std::endl;
 #ifndef TEST_CUBE
-				// pressed_finger의 정보를 바탕으로 mode 지정.
-				detect_mode(mode, pressed_finger);
+
+				//if(read_num == 1)
+				//{
+					// pressed_finger의 정보를 바탕으로 mode 지정.
+					detect_mode(mode, pressed_finger);
+				//}
 #endif//TEST_CUBE
 
 				std::cout << "[detect_mode]: "<< mode << std::endl;
@@ -383,10 +383,9 @@ public:
                                 	touchPt.z = cloud_touch->points[current_min_index].z;
                                 	viewer->addSphere(touchPt, 0.1, 0.0, 0.0, 1.0, "touchPt");
 
-
                                         // 조건 없이 터치가 되는 자리(touchPt)로 마우스 이동.
 					fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"move");
-#ifdef UNITY_MODE
+#ifdef UNITY_MODE	////////////////////////////////////////////////////////////////////////////////////
 					if (!last_frame_touched)
 					{
 						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
@@ -448,22 +447,46 @@ public:
 				if (cloud_filtered->size() != 0 && cloud_touch->size() == 0)
 				{
 
-#ifdef UNITY_MODE
+#ifdef UNITY_MODE	///////////////////////////////////////////////////////////////////////////////////
 					// ++++++++++ MODE: "pick_hold" (in UNITY_MODE)
 					if (!strcmp(mode, "pick_hold"))
 					{
-						float z_variation=0.0;
+						
 						float x_variation=0.0;
 						float y_variation=0.0;
-						
+						float z_variation=0.0;						
+
 						dis.push(z_minPt.z);
 						x_q.push(z_minPt.x);
 						y_q.push(z_minPt.y);
+						
+
+						/*
+						float euclidian_dist;
+						
+						point_q.push(z_minPt);
+						if(point_q.size()>2)
+						{
+							euclidian_dist = 
+								  pow(point_q.back().x-point_q.front().x, 2)
+								+ pow(point_q.back().y-point_q.front().y, 2)
+								+ pow(point_q.back().z-point_q.front().z, 2);
+
+							dis.push(euclidian_dist);
+						}
 
 						if(dis.size()>2)
 						{
 							dis.pop();
+							std::cout << "Z variation: " << point_q.back().x - point_q.front().x << std::endl;
+						}
+						*/
+						
+						if(dis.size()>2)
+						{
+							dis.pop();
 							z_variation = dis.back() - dis.front();
+							std::cout << "Z 변화량 : "<< z_variation << std::endl;
 						}
 						if(x_q.size()>2)
 						{
@@ -476,35 +499,39 @@ public:
 							y_variation = y_q.back() - y_q.front();
 						}
 					
-						if(z_variation > 0.05)
+						if(z_variation > 0.01)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Y");
+							//for(int j=0; j<3; j++)
+								fork_xdotool_event(sd, 0,0, (char *)"key_Y");
 						}
-						else if(z_variation < -0.05)
+						else if(z_variation < -0.01)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_T");
+							//for(int j=0; j<3; j++)
+								fork_xdotool_event(sd, 0,0, (char *)"key_T");
 						}
 //--------------------------------------------------
 						if(x_variation > 0.01)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Right");
+							//for(int j=0; j<3; j++)
+								fork_xdotool_event(sd, 0,0, (char *)"key_Right");
 						}
 						else if(x_variation < -0.01)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Left");
+							//for(int j=0; j<3; j++)
+								fork_xdotool_event(sd, 0,0, (char *)"key_Left");
 						}
 
 						if(y_variation > 0.01)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Up");//
+							//for(int j=0; j<3; j++)
+								fork_xdotool_event(sd, 0,0, (char *)"key_Up");//
 						}
 						else if(y_variation < -0.01)
 						{
-							fork_xdotool_event(sd, 0,0, (char *)"key_Down");//
+							//for(int j=0; j<3; j++)
+								fork_xdotool_event(sd, 0,0, (char *)"key_Down");//
 						}
 //-------------------------------------------------
-
-						
 						
 
 					}
@@ -591,10 +618,13 @@ public:
 				
 					}
 
-				}
-				
+					
 
+				}
 // -----------------------------Handling NON Touch Box END
+
+				if(!strcmp(mode, "unity_shoot"))
+					fork_xdotool_event(sd, 0.0, 0.0, (char *)"key_Space");
 
 
 				// 다음 프레임에서 이전의 프레임의 모드가 될 mode_past의 값 저장.

@@ -1,13 +1,7 @@
 /***********************************************************************\
- *			Copyright (C) Gyeongju Lee, 2019	Ver0.6	*
+ *			Copyright (C) Gyeongju Lee, 2019	Ver0.7	*
  * This program was created by a first-year student in the Department 	*
  * of Smart Systems Software in preparation for the competition.	*
- * This program was created to implement a technology that combines 	*
- * DepthCamera and a hologram display.					*
- * This Program can obtain information from sensors in your hand-held 	*
- * gloves and interact with the transparent holographic display 	*
- * in a variety of different ways.					*
- *									*
  * 									*
  * Contact: gjlee0802@naver.com						*
  \**********************************************************************/
@@ -15,7 +9,6 @@
 
 /*통신할 블루투스 포트 경로*/
 #define	MODEM_DEV	"/dev/rfcomm0"
-
 
 /* 
  * xy_distance():
@@ -230,6 +223,14 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
+			else if(!strcmp(command, "key_Space"))
+			{
+				std::cout << "[xdotool KEY]: Space" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "1", "space", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			
+			}
 
 			else
 			{
@@ -302,15 +303,15 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
               && pressed_finger[0][1]==false
               && pressed_finger[1][0]==false
               && pressed_finger[1][1]==true))
-        	strcpy(mode, "pick_hold");
-
+        	strcpy(mode, "zoom_scroll");
+/*
         // 두 손의 중지가 모두 눌렸을 때
         else if(pressed_finger[0][0]==false
              && pressed_finger[0][1]==true
              && pressed_finger[1][0]==false
              && pressed_finger[1][1]==true)
                 strcpy(mode, "zoom_scroll");
-	
+*/	
 	// 오직 하나의 검지만 눌렸을 때
 	else if((pressed_finger[0][0]==true
 	      && pressed_finger[0][1]==false
@@ -320,7 +321,18 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
 	      && pressed_finger[0][1]==false
 	      && pressed_finger[1][0]==true
 	      && pressed_finger[1][1]==false))
-		strcpy(mode, "click_once");
+		strcpy(mode, "pick_hold");
+
+	// 한손에서 검지와 중지가 모두 눌렸을 때
+	else if((pressed_finger[0][0]==true
+	      && pressed_finger[0][1]==true
+	      && pressed_finger[1][0]==false
+	      && pressed_finger[1][1]==false)
+	      ||(pressed_finger[0][0]==false
+	      && pressed_finger[0][1]==false
+	      && pressed_finger[1][0]==true
+	      && pressed_finger[1][1]==true))
+		strcpy(mode, "unity_shoot");
 
 
         else
@@ -379,11 +391,15 @@ struct thread_arg
 typedef struct thread_arg t_args;
 
 
+int read_num=0;	// WILL BE EXTERN...
+
 void *pthread_read(void *data)
 {
 	pthread_detach(pthread_self());
 
 	t_args *my_data = (t_args *)data;
+
+	//int cnt=0;
 
 	// [0]        [1]	    [2]		  [3]		[4]	      [5]      [6]      [7]
 	// (hand_num);(finger_num1);(finger_val1);(finger_num2);(finger_val2);(gyro_x);(gyro_y);(gyro_z);
@@ -402,6 +418,7 @@ void *pthread_read(void *data)
 		read(my_data->fd, &c, 1);
 		if(c == '\n')
 		{
+			//read_num++;
 			// Extract data START
 			int data_index=0;
 
@@ -445,10 +462,14 @@ void *pthread_read(void *data)
 				buff[index] = '\0';
 			}
 			// Clean buffer END
+			
+			//if(read_num == 1)
+			//	read_num=0;
 		}
 		else if(c != '\0')
 		{
 			char_append(buff, c);
+			printf("%s\n", buff);
 		}
 
 	}
@@ -460,14 +481,21 @@ void *init_miniterm()
 {
 
 	int fd;
+	int fd1;
 	pthread_t tid;
+	//pthread_t tid1;
 
 	fd = open(MODEM_DEV, O_RDWR | O_NOCTTY);
 	if(fd < 0){perror(MODEM_DEV); exit(-1);}
 
+	//fd1 = open(MODEM_DEV1, O_RDWR | O_NOCTTY);
+	//if(fd1 < 0){perror(MODEM_DEV1); exit(-1);}
+
 	t_args *data_struct = (t_args *)malloc(sizeof(t_args));
+	//t_args *data_struct1 = (t_args *)malloc(sizeof(t_args));
 
 	data_struct->fd = fd;
+	//data_struct1->fd = fd1;
 
 	if(pthread_create(&tid, NULL, pthread_read, (void *)data_struct)==-1)
 	{
@@ -476,6 +504,15 @@ void *init_miniterm()
 		close(fd);
 		exit(-1);
 	}
+	/*
+	if(pthread_create(&tid1, NULL, pthread_read, (void *)data_struct1)==-1)
+	{
+		fprintf(stdout, "ERROR : pthread_create\n");
+
+		close(fd1);
+		exit(-1);
+	}
+	*/
 	return data_struct;
 }
 
@@ -498,7 +535,7 @@ int fork_unity()
 			std::cout << "[EXECUTE UNITY_3D]" << std::endl;
 			
 			//execl("/home/user/workspace/proj/unity3d/bin/test.x86_64", "/home/user/workspace/proj/unity3d/bin/test.x86_64", NULL);
-			execl("/home/user/workspace/test_unity/test/TEST.x86_64", "/home/user/workspace/test_unity/test/TEST.x86_64", NULL);
+			execl("/home/user/workspace/proj/unity_bin/TEST2.x86_64", "/home/user/workspace/proj/unity_bin/TEST2.x86_64", NULL);
 			perror("[ERROR]: execl");
 			exit(1);
 		}

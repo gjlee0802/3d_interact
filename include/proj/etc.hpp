@@ -57,6 +57,8 @@ int detect_mode(char *, int (* )[2]);
 void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &, void *);
 void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
 
+extern int read_num;
+
 void *pthread_create(void *);
 void *init_miniterm();
 
