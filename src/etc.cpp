@@ -1,10 +1,3 @@
-/***********************************************************************\
- *			Copyright (C) Gyeongju Lee, 2019	Ver0.7	*
- * This program was created by a first-year student in the Department 	*
- * of Smart Systems Software in preparation for the competition.	*
- * 									*
- * Contact: gjlee0802@naver.com						*
- \**********************************************************************/
 #include "proj/etc.hpp"
 
 /*통신할 블루투스 포트 경로*/
@@ -28,32 +21,13 @@ float xy_distance(pcl::PointXYZ p1, pcl::PointXYZ p2)
         return distance;
 }
 
-/*
- * fork_xdotool_event(): 
- *
- * Fist Parameter: 스크린의 정보가 담긴 Screen_data구조체의 주소를 받는다.
- * Second/Third Parameter: Point Cloud Data 기준의 (x,y)좌표를 받는다.
- * Fourth Parameter: 실행할 명령을 입력받는다.
- *
- * double fork를 통해 좀비 프로세스가 발생하지 않도록 한다.
- * 
- * 부모 프로세스A는 fork()를 통해 자식 프로세스B를 낳고 자식 프로세스가 종료하길 기다린다.
- * 자식 프로세스B에서는 fork()를 통해 자식 프로세스C를 낳고 exit()를 실행하여 바로 종료한다.
- * C의 부모 프로세스였던 프로세스B가 종료되었으므로 init소속의 프로세스가 되어 exec함수가 종료된 후에 정상종료한다.
- * (exec계열의 함수를 통해 마우스 제어 프로그램인 xdotool을 실행한다.)
- * 
- * -> double fork를 안하고 단일 fork를 한다면 scroll과 같은 xdotool실행에서 시간이 상당히 소요되어 프레임 속도가 매우 저하됨.
- *
- * fork()를 실패하면 -1을 반환한다.
- * command 인식에 실패하면 0을 반환한다.
- * 성공하면 1을 반환한다.
- */
-
 pcl::PointXYZ mouse_past;
 pcl::PointXYZ mouse_now;
 
-
 //-----TESTING
+/*
+ * xdotool을 이용하지 않고 입력 구현
+ */
 int input_event()
 {
 	struct input_event event, event_end;
@@ -86,7 +60,27 @@ int input_event()
 }
 //-----
 
-int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
+/*
+ * fork_xdotool_event(): 
+ *
+ * Fist Parameter: 스크린의 정보가 담긴 Screen_data구조체의 주소를 받는다.
+ * Second/Third Parameter: Point Cloud Data 기준의 (x,y)좌표를 받는다.
+ * Fourth Parameter: 실행할 명령을 입력받는다.
+ *
+ * double fork를 통해 좀비 프로세스가 발생하지 않도록 한다.
+ * 
+ * 부모 프로세스A는 fork()를 통해 자식 프로세스B를 낳고 자식 프로세스가 종료하길 기다린다.
+ * 자식 프로세스B에서는 fork()를 통해 자식 프로세스C를 낳고 exit()를 실행하여 바로 종료한다.
+ * C의 부모 프로세스였던 프로세스B가 종료되었으므로 init소속의 프로세스가 되어 exec함수가 종료된 후에 정상종료한다.
+ * (exec계열의 함수를 통해 마우스 제어 프로그램인 xdotool을 실행한다.)
+ * 
+ * -> double fork를 안하고 단일 fork를 한다면 scroll과 같은 xdotool실행에서 시간이 상당히 소요되어 프레임 속도가 매우 저하됨.
+ *
+ * fork()를 실패하면 -1을 반환한다.
+ * command 인식에 실패하면 0을 반환한다.
+ * 성공하면 1을 반환한다.
+ */
+int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command )
 {
 	char x_buff[256];
 	char y_buff[256];
@@ -212,14 +206,14 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command)
 			else if(!strcmp(command, "key_T"))
 			{
 				std::cout << "[xdotool KEY]: T" << std::endl;
-				execlp("xdotool", "xdotool", "key", "--repeat", "1", "T", NULL);
+				execlp("xdotool", "xdotool", "key", "--repeat", "2", "T", NULL);
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
 			else if(!strcmp(command, "key_Y"))
 			{
 				std::cout << "[xdotool KEY]: Y" << std::endl;
-				execlp("xdotool", "xdotool", "key", "--repeat", "1", "Y", NULL);
+				execlp("xdotool", "xdotool", "key", "--repeat", "2", "Y", NULL);
 				perror("[ERROR]: execlp");
 				exit(1);
 			}
@@ -399,7 +393,6 @@ void *pthread_read(void *data)
 
 	t_args *my_data = (t_args *)data;
 
-	//int cnt=0;
 
 	// [0]        [1]	    [2]		  [3]		[4]	      [5]      [6]      [7]
 	// (hand_num);(finger_num1);(finger_val1);(finger_num2);(finger_val2);(gyro_x);(gyro_y);(gyro_z);
@@ -418,14 +411,12 @@ void *pthread_read(void *data)
 		read(my_data->fd, &c, 1);
 		if(c == '\n')
 		{
-			//read_num++;
 			// Extract data START
 			int data_index=0;
 
 			char *ptr = strtok(buff, ";");
 			while(ptr != NULL)
 			{
-				//printf("%s\n", ptr);
 				switch (data_index)
 				{
 				case 0:
@@ -463,8 +454,6 @@ void *pthread_read(void *data)
 			}
 			// Clean buffer END
 			
-			//if(read_num == 1)
-			//	read_num=0;
 		}
 		else if(c != '\0')
 		{
@@ -483,19 +472,14 @@ void *init_miniterm()
 	int fd;
 	int fd1;
 	pthread_t tid;
-	//pthread_t tid1;
 
 	fd = open(MODEM_DEV, O_RDWR | O_NOCTTY);
 	if(fd < 0){perror(MODEM_DEV); exit(-1);}
 
-	//fd1 = open(MODEM_DEV1, O_RDWR | O_NOCTTY);
-	//if(fd1 < 0){perror(MODEM_DEV1); exit(-1);}
 
 	t_args *data_struct = (t_args *)malloc(sizeof(t_args));
-	//t_args *data_struct1 = (t_args *)malloc(sizeof(t_args));
 
 	data_struct->fd = fd;
-	//data_struct1->fd = fd1;
 
 	if(pthread_create(&tid, NULL, pthread_read, (void *)data_struct)==-1)
 	{
@@ -504,15 +488,6 @@ void *init_miniterm()
 		close(fd);
 		exit(-1);
 	}
-	/*
-	if(pthread_create(&tid1, NULL, pthread_read, (void *)data_struct1)==-1)
-	{
-		fprintf(stdout, "ERROR : pthread_create\n");
-
-		close(fd1);
-		exit(-1);
-	}
-	*/
 	return data_struct;
 }
 

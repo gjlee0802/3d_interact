@@ -1,10 +1,3 @@
-/***********************************************************************\
- *			Copyright (C) Gyeongju Lee, 2019	Ver0.7	*
- * This program was created by a first-year student in the Department 	*
- * of Smart Systems Software in preparation for the competition.	* 
- * 									*
- * Contact: gjlee0802@naver.com						*
- \**********************************************************************/
 #include <iostream>
 
 #include <queue>
@@ -498,13 +491,13 @@ public:
 							y_q.pop();
 							y_variation = y_q.back() - y_q.front();
 						}
-					
-						if(z_variation > 0.01)
+#define TEL
+						if(z_variation > 0.02)
 						{
 							//for(int j=0; j<3; j++)
 								fork_xdotool_event(sd, 0,0, (char *)"key_Y");
 						}
-						else if(z_variation < -0.01)
+						else if(z_variation < -0.02)
 						{
 							//for(int j=0; j<3; j++)
 								fork_xdotool_event(sd, 0,0, (char *)"key_T");
