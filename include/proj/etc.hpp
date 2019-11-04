@@ -23,6 +23,14 @@
 
 extern int pressed_finger[2][2];
 
+struct Gyro{
+	float x;
+	float y;
+	float z;
+};
+
+extern struct Gyro gyro;
+
 struct Screen_data {
         //모니터 해상도에 따라 변경
         float Screen_width   = 1920;		// 모니터 화면의 x좌표 최댓값
@@ -58,6 +66,8 @@ void keyboardEventOccurred(const pcl::visualization::KeyboardEvent &, void *);
 void mouseEventOccurred(const pcl::visualization::MouseEvent &, void *);
 
 extern int read_num;
+
+extern int issame;
 
 void *pthread_create(void *);
 void *init_miniterm();

@@ -225,7 +225,37 @@ int fork_xdotool_event(struct Screen_data *sd, float x, float y, char * command 
 				exit(1);
 			
 			}
-
+			else if(!strcmp(command, "keydown_Alt"))
+			{
+				
+				std::cout << "[xdotool KEY]: Alt" << std::endl;
+				execlp("xdotool", "xdotool", "keydown", "--repeat", "1", "alt", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+			else if(!strcmp(command, "keyup_Alt"))
+			{
+				
+				std::cout << "[xdotool KEY]: Alt" << std::endl;
+				execlp("xdotool", "xdotool", "keyup", "--repeat", "1", "alt", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+			else if(!strcmp(command, "key_Right"))
+			{
+				std::cout << "[xdotool KEY]: Right" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "1", "right", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+			else if(!strcmp(command, "key_Left"))
+			{
+				std::cout << "[xdotool KEY]: Left" << std::endl;
+				execlp("xdotool", "xdotool", "key", "--repeat", "1", "left", NULL);
+				perror("[ERROR]: execlp");
+				exit(1);
+			}
+				
 			else
 			{
 				std::cout << "[xdotool WARNING]: Command not found!: "<< command << std::endl;
@@ -287,7 +317,6 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
         && pressed_finger[1][0]==false
         && pressed_finger[1][1]==false)
 		strcpy(mode, "nothing");
-        	
        // 오직 하나의 중지만 눌렸을 때
         else if((pressed_finger[0][0]==false
               && pressed_finger[0][1]==true
@@ -316,7 +345,6 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
 	      && pressed_finger[1][0]==true
 	      && pressed_finger[1][1]==false))
 		strcpy(mode, "pick_hold");
-
 	// 한손에서 검지와 중지가 모두 눌렸을 때
 	else if((pressed_finger[0][0]==true
 	      && pressed_finger[0][1]==true
@@ -326,13 +354,13 @@ int detect_mode(char *mode, int (*pressed_finger)[2])
 	      && pressed_finger[0][1]==false
 	      && pressed_finger[1][0]==true
 	      && pressed_finger[1][1]==true))
-		strcpy(mode, "unity_shoot");
-
-
+		strcpy(mode, "spin_hold");
+		//strcpy(mode, "unity_shoot");
         else
         {
                         std::cout << "[?]: Cannot detect the mode!" << std::endl;
 			return 0;
+
 	}
 
 	return 1;
@@ -387,6 +415,9 @@ typedef struct thread_arg t_args;
 
 int read_num=0;	// WILL BE EXTERN...
 
+
+int issame=0;
+
 void *pthread_read(void *data)
 {
 	pthread_detach(pthread_self());
@@ -395,8 +426,8 @@ void *pthread_read(void *data)
 
 
 	// [0]        [1]	    [2]		  [3]		[4]	      [5]      [6]      [7]
-	// (hand_num);(finger_num1);(finger_val1);(finger_num2);(finger_val2);(gyro_x);(gyro_y);(gyro_z);
-	char buff[1024];
+	// #;	   (hand_num);(finger_num1);(finger_val1);(finger_num2);(finger_val2);(gyro_x);(gyro_y);(gyro_z);
+	char buff[40];
 	int index = 0;
 
 	char c;
@@ -405,37 +436,83 @@ void *pthread_read(void *data)
 	int finger_num=0;
 	int finger_val=0;
 
+	float gyro_x = 0.0f;
+	float gyro_y = 0.0f;
+	float gyro_z = 0.0f;
+
+	float past[3]={-80, -80, -80};
+
+	int isok=0;
+	
 	while(1)
 	{
-
 		read(my_data->fd, &c, 1);
 		if(c == '\n')
 		{
+			printf("buff >> %s\n",buff);
 			// Extract data START
 			int data_index=0;
 
 			char *ptr = strtok(buff, ";");
 			while(ptr != NULL)
 			{
+				printf("isok >> %d\n", isok);
 				switch (data_index)
 				{
 				case 0:
-					hand_num = atoi(ptr);
+					if(!strcmp(ptr, "#"))
+					{	
+						isok++;
+						if(isok>1)
+						{
+							printf("맛이 갔었습니다. 새로 읽습니다.\n");
+							isok=1;
+						}
+					}
 					break;
+						
 				case 1:
-					finger_num = atoi(ptr);
+					if(isok==1)
+						hand_num = atoi(ptr);
 					break;
 				case 2:
-					finger_val = atoi(ptr);
-					pressed_finger[hand_num][finger_num] = finger_val;
+					
+					if(isok==1)
+						finger_num = atoi(ptr);
 					break;
 				case 3:
-					finger_num = atoi(ptr);
+					if(isok==1)
+					{
+						finger_val = atoi(ptr);
+						pressed_finger[hand_num][finger_num] = finger_val;
+					}
 					break;
 				case 4:
-					finger_val = atoi(ptr);
-					if((finger_num==0 || finger_num==1) && (finger_val==0 || finger_val==1))
-						pressed_finger[hand_num][finger_num] = finger_val;
+					if(isok==1)
+						finger_num = atoi(ptr);
+					break;
+				case 5:
+					if(isok==1)
+					{
+						finger_val = atoi(ptr);
+						if((finger_num==0 || finger_num==1) && (finger_val==0 || finger_val==1))
+							pressed_finger[hand_num][finger_num] = finger_val;
+					}
+					break;
+				case 6:
+					if(isok==1)
+						gyro.x = (float)atof(ptr);
+					break;
+				case 7:
+					if(isok==1)
+						gyro.y = (float)atof(ptr);
+					break;
+				case 8:
+					if(isok==1)
+					{
+						gyro.z = (float)atof(ptr);
+						isok--;
+					}	
 					break;
 				}
 
@@ -444,24 +521,28 @@ void *pthread_read(void *data)
 			}
 			// Extract data END
 
-
 			// Clean buffer START
+			/*
 			while(buff[index] != '\0') index++;
 			while(index > 0)
 			{
 				index--;
 				buff[index] = '\0';
 			}
+			*/
+			for(int i=0; i<30; i++)
+				buff[i] = '\0';
 			// Clean buffer END
 			
 		}
 		else if(c != '\0')
 		{
 			char_append(buff, c);
-			printf("%s\n", buff);
+			//printf("%s\n", buff);
 		}
 
 	}
+	printf(" >> %s\n", buff);
 	return NULL;
 }
 

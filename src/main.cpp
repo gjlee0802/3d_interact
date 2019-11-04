@@ -17,7 +17,7 @@
 //-------------------<사용자 설정 값>-----------------------
 #define TOUCH_Z_MAX	10.2				// TOUCH_Z_MAX를 변경할 경우, Screen_data 구조체의 값들을 새롭게 측정한 실측값으로 변경.
 //#define TEST_CUBE
-#define UNITY_MODE					// Unity3D 연동 모드.
+//#define UNITY_MODE					// Unity3D 연동 모드.
 
 #ifdef TEST_CUBE
 #define TEST_CUBE_LEN	1.0
@@ -30,6 +30,7 @@ using namespace std;
 typedef pcl::PointXYZ PointT;
 
 int pressed_finger[2][2] = {{0,0}, {0,0}};
+struct Gyro gyro;
 
 class GestureHandler
 {
@@ -201,6 +202,7 @@ public:
 				//}
 #endif//TEST_CUBE
 
+				printf("issame : %d", issame);
 				std::cout << "[detect_mode]: "<< mode << std::endl;
 
 				// Remove shapes to update shapes START
@@ -393,32 +395,39 @@ public:
 						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
 						fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"click");
 					}
-
+/*
 #ifndef UNITY_MODE
-					// ++++++++++ MODE: "pick_hold"
-					/* 
-					 * 하나의 중지를 활성화시킨 상태로 터치영역 안에 들어갔을 때부터 중지를 계속 활성되어 있는 동안 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)문 안에 넣는다.
-					 * 터치 여부와 관계없이 하나의 중지를 활성화시킨 상태일 때 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)밖에 둔다.
-					 */
-					if(!strcmp(mode, "pick_hold"))
-					{
-						if(exe_once == false)
-						{
-							fork_xdotool_event(sd, touchPt.x, touchPt.y, (char *)"mouse_down");
-							exe_once = 1;		//터치 영역에 처음 들어간 순간부터 exe_once==true 인 동안 pick_hold모드를 유지 시킨다.
-						}
-
-					}
 #endif//UNITY_MODE
-
+*/
 					
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 0.0, 1.0, 0.0);
                                 }
 
 				else	// cloud_touch에 속한 점 데이터가 없을 경우 (터치하지 않았을 경우)
 				{
-					last_frame_touched = false;
 
+					// ++++++++++ MODE: "pick_hold"
+					/* 
+					 * 하나의 중지를 활성화시킨 상태로 터치영역 안에 들어갔을 때부터 중지를 계속 활성되어 있는 동안 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)문 안에 넣는다.
+					 * 터치 여부와 관계없이 하나의 중지를 활성화시킨 상태일 때 mouse_down을 수행하고 싶다면 다음 조건문을 if(cloud_touch->size()!=0)밖에 둔다.
+					 */
+					if(!strcmp(mode, "pick_hold") && strcmp(mode_past, "pick_hold"))
+					{
+							fork_xdotool_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"mouse_down");
+
+					}
+					else if(!strcmp(mode, "pick_hold") && !strcmp(mode_past, "pick_hold"))
+					{
+							fork_xdotool_event(sd, z_minPt.x, z_minPt.y, (char *)"move");
+					}
+					else if(strcmp(mode, "pick_hold") && !strcmp(mode_past, "pick_hold"))
+					{
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"mouse_up");
+					}
+
+					last_frame_touched = false;
+					/*
 					if(exe_once == true)	// 모드 유지가 활성화되어 있는 상태일 경우
 					{
 
@@ -428,6 +437,7 @@ public:
 						}
 						//else if(!strcpy(mode, ""))
 					}
+					*/
 					draw_tp_box(touch_box_min_z, touch_box_max_z, 1.0, 0.0, 0.0);
 				}
 
@@ -616,8 +626,47 @@ public:
 				}
 // -----------------------------Handling NON Touch Box END
 
+#ifdef UNITY_MODE
 				if(!strcmp(mode, "unity_shoot"))
 					fork_xdotool_event(sd, 0.0, 0.0, (char *)"key_Space");
+#endif		
+
+				printf("GYRO>> x:%f y:%f z:%f \n", gyro.x, gyro.y, gyro.z);
+				if(!strcmp(mode, "spin_hold"))
+				{
+					if(strcmp(mode_past, mode))
+						y_q.push(gyro.y);
+
+					while(y_q.size() > 2)
+						y_q.pop();
+
+					y_q.push(gyro.x);
+
+					if(y_q.size() == 2)
+					{
+						if(y_q.front()-y_q.back() >= 0.03)		//왼쪽으로 기울어졌을 경우
+						{
+						
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"keydown_Alt");
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"key_Right");	//or left
+						}
+						else if(y_q.front()-y_q.back() <= -0.03)	//오른쪽으로 기울어졌을 경우
+						{
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"keydown_Alt");
+							fork_xdotool_event(sd, 0.0, 0.0, (char *)"key_Left");	//or left
+						}
+						
+					}
+					
+				}
+				else
+				{
+					while(!y_q.empty())
+						y_q.pop();
+
+					if(!strcmp(mode_past, "spin_hold"))
+						fork_xdotool_event(sd, 0.0, 0.0, (char *)"keyup_Alt");
+				}
 
 
 				// 다음 프레임에서 이전의 프레임의 모드가 될 mode_past의 값 저장.
@@ -627,6 +676,7 @@ public:
 				viewer->removePointCloud("cloud");
 				viewer->addPointCloud(cloud_filtered,"cloud");
 
+				printf("\e[2J\e[H");
 			}
 		}
 
