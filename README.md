@@ -7,3 +7,11 @@
 
 A sloppy project first started in college.   
 Used PointCloudLibrary   
+
+Transform hand movements into keyboard or mouse values and pass input to the computer.   
+
+requirements
+~~~
+xdotool
+pointcloudlibrary
+~~~
